@@ -1,0 +1,359 @@
+{
+  "_about": "Demo data for Ward 2B, Harmony Eldercare. All people are fictional. Times are minutes from 00:00 today (Asia/Singapore); negative values are earlier days. The demo clock starts at clockStart.",
+  "clockStart": 492,
+  "home": { "id": "h-harmony-1", "name": "Harmony Nursing Home (Bukit Panjang)", "organisation": "Harmony Eldercare" },
+  "ward": { "id": "w-2b", "code": "2B", "name": "Ward 2B", "beds": 12 },
+  "shifts": [
+    { "id": "night", "label": "Night", "start": "23:00", "end": "07:00" },
+    { "id": "am", "label": "AM", "start": "07:00", "end": "15:00" },
+    { "id": "pm", "label": "PM", "start": "15:00", "end": "23:00" }
+  ],
+  "staff": [
+    { "id": "s-aisyah", "name": "Aisyah Rahman", "short": "Aisyah", "role": "RN", "title": "Registered nurse · Nurse in charge", "shift": "am" },
+    { "id": "s-ramesh", "name": "Ramesh Kumar", "short": "Ramesh", "role": "EN", "title": "Enrolled nurse", "shift": "am" },
+    { "id": "s-maricel", "name": "Maricel Santos", "short": "Maricel", "role": "CA", "title": "Care aide", "shift": "am" },
+    { "id": "s-mary", "name": "Mary Lim", "short": "Mary", "role": "NM", "title": "Nurse manager", "shift": "am" },
+    { "id": "s-grace", "name": "Grace Tan", "short": "Grace", "role": "RN", "title": "Registered nurse", "shift": "pm" },
+    { "id": "s-hidayah", "name": "Nur Hidayah", "short": "Hidayah", "role": "RN", "title": "Registered nurse", "shift": "night" },
+    { "id": "s-faiz", "name": "Faiz Rahim", "short": "Faiz", "role": "EN", "title": "Enrolled nurse", "shift": "night" },
+    { "id": "s-drlim", "name": "Dr Lim Wei Ming", "short": "Dr Lim", "role": "DR", "title": "Visiting doctor", "shift": null },
+    { "id": "s-kevin", "name": "Kevin Tan", "short": "Kevin", "role": "PH", "title": "Pharmacist", "shift": null }
+  ],
+  "residents": [
+    {
+      "id": "r-lim", "bed": "2B-01", "salutation": "Mr", "name": "Lim Ah Kow", "preferred": "Ah Kow", "sex": "M", "dob": "1947-03-12",
+      "nric": "S••••312H", "admitted": "2023-06-02", "languages": ["Hokkien", "English"], "religion": "Taoist",
+      "diagnoses": ["Type 2 diabetes on insulin", "Chronic kidney disease stage 3", "Hypertension"],
+      "allergies": [],
+      "acp": { "resus": "Full resuscitation", "note": "Wants hospital transfer if unwell." },
+      "decisionMaker": { "name": "Lim Boon Hock", "relation": "Son", "type": "Next of kin", "phone": "+65 9123 4471" },
+      "diet": "Diabetic diet, 1.5 L fluids", "swallow": "Normal", "mobility": "Walks with stick", "continence": "Continent",
+      "status": "in", "flags": ["diabetic"]
+    },
+    {
+      "id": "r-muthu", "bed": "2B-02", "salutation": "Mr", "name": "Muthusamy Rajendran", "preferred": "Muthu", "sex": "M", "dob": "1938-11-02",
+      "nric": "S••••201D", "admitted": "2022-01-17", "languages": ["Tamil", "English"], "religion": "Hindu",
+      "diagnoses": ["Parkinson's disease", "Dysphagia", "Constipation"],
+      "allergies": [{ "substance": "Sulfonamides", "classes": ["sulfonamide"], "reaction": "Widespread rash", "severity": "moderate", "type": "allergy" }],
+      "acp": { "resus": "Do not attempt CPR", "note": "Comfort-focused. Family to be called for any change." },
+      "decisionMaker": { "name": "Priya Muthusamy", "relation": "Daughter", "type": "LPA donee", "phone": "+65 9876 2210" },
+      "diet": "Minced and moist (IDDSI 5), mildly thick fluids (IDDSI 2)", "swallow": "Dysphagia: disperse tablets, sit upright", "mobility": "Hoist and 2 staff", "continence": "Incontinent, pads",
+      "status": "in", "flags": ["dysphagia", "time-critical"]
+    },
+    {
+      "id": "r-wong", "bed": "2B-03", "salutation": "Mdm", "name": "Wong Mei Fong", "preferred": "Mei Fong", "sex": "F", "dob": "1935-05-27",
+      "nric": "S••••944A", "admitted": "2021-09-08", "languages": ["Cantonese"], "religion": "Buddhist",
+      "diagnoses": ["Advanced dementia", "Osteoarthritis, both knees", "Sacral pressure injury"],
+      "allergies": [],
+      "acp": { "resus": "Do not attempt CPR", "note": "Prefers to stay in the home. Comfort care." },
+      "decisionMaker": { "name": "Wong Kar Wai", "relation": "Son", "type": "Deputy (court-appointed)", "phone": "+65 9644 0182" },
+      "diet": "Soft and bite-sized (IDDSI 6), assisted feeding", "swallow": "Assist with feeding", "mobility": "Bedbound, 2-hourly turns", "continence": "Incontinent, pads",
+      "status": "in", "flags": ["pressure"]
+    },
+    {
+      "id": "r-siti", "bed": "2B-04", "salutation": "Mdm", "name": "Siti binte Hassan", "preferred": "Siti", "sex": "F", "dob": "1950-08-19",
+      "nric": "S••••587J", "admitted": "2024-02-12", "languages": ["Malay", "English"], "religion": "Muslim",
+      "diagnoses": ["Heart failure", "Atrial fibrillation", "Hypertension"],
+      "allergies": [{ "substance": "Aspirin", "classes": ["salicylate", "nsaid"], "reaction": "Bronchospasm", "severity": "severe", "type": "allergy" }],
+      "acp": { "resus": "Full resuscitation", "note": "" },
+      "decisionMaker": { "name": "Nurul Ain", "relation": "Daughter", "type": "LPA donee", "phone": "+65 8122 7743" },
+      "diet": "Halal, low salt, fluid limit 1.2 L", "swallow": "Normal", "mobility": "Walking frame, 1 assist", "continence": "Continent",
+      "status": "in", "flags": ["anticoagulant"]
+    },
+    {
+      "id": "r-goh", "bed": "2B-05", "salutation": "Mr", "name": "Goh Kim Huat", "preferred": "Kim Huat", "sex": "M", "dob": "1944-01-30",
+      "nric": "S••••118C", "admitted": "2023-11-20", "languages": ["Teochew", "Mandarin"], "religion": "Christian",
+      "diagnoses": ["Recent aspiration pneumonia (treated 15 Oct)", "Hypertension", "Mild cognitive impairment"],
+      "allergies": [],
+      "acp": { "resus": "Full resuscitation", "note": "Happy to go to hospital if needed." },
+      "decisionMaker": { "name": "Goh Siew Peng", "relation": "Wife", "type": "Next of kin", "phone": "+65 9330 5517" },
+      "diet": "Soft diet, encourage fluids", "swallow": "Upright 30 min after meals", "mobility": "Walking frame", "continence": "Continent",
+      "status": "in", "flags": ["watch"]
+    },
+    {
+      "id": "r-chua", "bed": "2B-06", "salutation": "Mdm", "name": "Chua Bee Leng", "preferred": "Bee Leng", "sex": "F", "dob": "1939-12-04",
+      "nric": "S••••760F", "admitted": "2022-07-01", "languages": ["Hokkien", "Mandarin"], "religion": "Buddhist",
+      "diagnoses": ["Osteoporosis", "Depression", "Hip fracture 2021 (repaired)"],
+      "allergies": [{ "substance": "Codeine", "classes": ["opioid-codeine"], "reaction": "Vomiting", "severity": "mild", "type": "intolerance" }],
+      "acp": { "resus": "Do not attempt CPR", "note": "" },
+      "decisionMaker": { "name": "Tan Hui Min", "relation": "Niece", "type": "LPA donee", "phone": "+65 9771 3020" },
+      "diet": "Normal, high calcium", "swallow": "Normal", "mobility": "Walking frame, supervision", "continence": "Continent",
+      "status": "in", "flags": []
+    },
+    {
+      "id": "r-tan", "bed": "2B-07", "salutation": "Mdm", "name": "Tan Siew Lan", "preferred": "Siew Lan", "sex": "F", "dob": "1942-04-09",
+      "nric": "S••••567A", "admitted": "2026-09-14", "languages": ["Hokkien", "Mandarin"], "religion": "Buddhist",
+      "diagnoses": ["Stroke with left-sided weakness", "Hypertension", "Hyperlipidaemia", "Chest infection (on antibiotics since 23 Oct)"],
+      "allergies": [{ "substance": "Penicillin", "classes": ["penicillin", "beta-lactam"], "reaction": "Anaphylaxis (2019)", "severity": "severe", "type": "allergy" }],
+      "acp": { "resus": "Full resuscitation", "note": "Prefers not to go to hospital unless essential. Discuss with daughter first." },
+      "decisionMaker": { "name": "Tan Mei Ling", "relation": "Daughter", "type": "LPA donee", "phone": "+65 9188 6024" },
+      "diet": "Soft diet, Chinese menu", "swallow": "Normal, sit upright", "mobility": "Walking frame, 1 assist. High falls risk", "continence": "Continent, needs help to toilet",
+      "status": "in", "flags": ["falls"]
+    },
+    {
+      "id": "r-maria", "bed": "2B-08", "salutation": "Mrs", "name": "Maria Fernandez", "preferred": "Maria", "sex": "F", "dob": "1946-06-21",
+      "nric": "S••••033B", "admitted": "2024-10-03", "languages": ["English"], "religion": "Catholic",
+      "diagnoses": ["Hypothyroidism", "Osteoarthritis", "Macular degeneration"],
+      "allergies": [{ "substance": "Latex", "classes": ["latex"], "reaction": "Contact dermatitis", "severity": "moderate", "type": "allergy" }],
+      "acp": { "resus": "Full resuscitation", "note": "" },
+      "decisionMaker": { "name": "Andrew Fernandez", "relation": "Son", "type": "LPA donee", "phone": "+65 9015 4482" },
+      "diet": "Normal", "swallow": "Normal", "mobility": "Independent with stick. Poor vision", "continence": "Continent",
+      "status": "in", "flags": []
+    },
+    {
+      "id": "r-ong", "bed": "2B-09", "salutation": "Mr", "name": "Ong Teck Seng", "preferred": "Teck Seng", "sex": "M", "dob": "1941-09-15",
+      "nric": "S••••452G", "admitted": "2023-03-28", "languages": ["Mandarin", "English"], "religion": "Free thinker",
+      "diagnoses": ["Benign prostatic hyperplasia", "Hypertension", "Gout"],
+      "allergies": [{ "substance": "Allopurinol", "classes": ["xanthine-oxidase-inhibitor"], "reaction": "Severe skin reaction (SJS)", "severity": "severe", "type": "allergy" }],
+      "acp": { "resus": "Full resuscitation", "note": "" },
+      "decisionMaker": { "name": "Ong Li Hua", "relation": "Daughter", "type": "Next of kin", "phone": "+65 9644 8810" },
+      "diet": "Low purine", "swallow": "Normal", "mobility": "Independent", "continence": "Urinary catheter",
+      "status": "hospital", "statusNote": "Transferred to Changi General Hospital on 22 Oct for urinary retention. Doses suspended.",
+      "flags": []
+    },
+    {
+      "id": "r-kaur", "bed": "2B-10", "salutation": "Mdm", "name": "Gurmeet Kaur", "preferred": "Gurmeet", "sex": "F", "dob": "1948-02-07",
+      "nric": "S••••689E", "admitted": "2026-10-17", "languages": ["Punjabi", "English"], "religion": "Sikh",
+      "diagnoses": ["Type 2 diabetes", "Osteoarthritis", "Mild hearing loss"],
+      "allergies": [],
+      "acp": { "resus": "Full resuscitation", "note": "" },
+      "decisionMaker": { "name": "Harpreet Singh", "relation": "Son", "type": "LPA donee", "phone": "+65 9322 1405" },
+      "diet": "Vegetarian, diabetic", "swallow": "Normal", "mobility": "Walking frame", "continence": "Continent",
+      "status": "in", "flags": ["diabetic", "respite"],
+      "stay": { "type": "respite", "from": "2026-10-17", "to": "2026-10-31", "note": "Two-week respite while her son travels. Medical report dated 2 Oct, valid to 2 Apr 2027. Planned discharge home on 31 Oct, 10:00." }
+    },
+    {
+      "id": "r-ho", "bed": "2B-11", "salutation": "Mr", "name": "Ho Peng", "preferred": "Ah Peng", "sex": "M", "dob": "1936-10-11",
+      "nric": "S••••275K", "admitted": "2024-08-05", "languages": ["Cantonese", "Mandarin"], "religion": "Buddhist",
+      "diagnoses": ["Alzheimer's dementia with agitation", "Hypertension"],
+      "allergies": [],
+      "acp": { "resus": "Do not attempt CPR", "note": "" },
+      "decisionMaker": { "name": "Ho Yee Ling", "relation": "Daughter", "type": "LPA donee", "phone": "+65 9555 0127" },
+      "diet": "Normal, finger food", "swallow": "Normal", "mobility": "Walks independently, wanders", "continence": "Needs prompting",
+      "status": "in", "flags": ["wander"]
+    },
+    {
+      "id": "r-lee", "bed": "2B-12", "salutation": "Mdm", "name": "Lee Swee Chin", "preferred": "Swee Chin", "sex": "F", "dob": "1943-07-30",
+      "nric": "S••••821Z", "admitted": "2026-10-23", "languages": ["Mandarin", "Hakka"], "religion": "Buddhist",
+      "diagnoses": ["Osteoarthritis, right hip", "Gastric ulcer (2024)", "Skin tear, left forearm"],
+      "allergies": [{ "substance": "NSAIDs", "classes": ["nsaid"], "reaction": "Gastric bleed", "severity": "severe", "type": "allergy" }],
+      "acp": { "resus": "Not yet discussed", "note": "ACP conversation to be booked with family." },
+      "decisionMaker": { "name": "Lee Kok Wah", "relation": "Son", "type": "Next of kin", "phone": "+65 9018 2276" },
+      "diet": "Normal", "swallow": "Normal", "mobility": "Walking frame, 1 assist", "continence": "Continent",
+      "status": "in", "flags": ["new"]
+    }
+  ],
+  "orders": [
+    { "id": "o-lim-glar", "rid": "r-lim", "drug": "Insulin glargine (Lantus SoloStar)", "dose": "18 units", "route": "Subcutaneous", "slots": ["08:00"], "indication": "Type 2 diabetes", "classes": ["insulin"], "supply": "pack", "highAlert": true, "check": { "field": "cbg", "label": "Capillary glucose", "unit": "mmol/L", "holdBelow": 4, "warnAbove": 20 }, "instructions": "Rotate sites. Check CBG first.", "prescriber": "Dr Lim Wei Ming", "start": "2025-11-03" },
+    { "id": "o-lim-lina", "rid": "r-lim", "drug": "Linagliptin", "dose": "5 mg tablet", "route": "Oral", "slots": ["08:00"], "indication": "Type 2 diabetes", "classes": ["dpp4"], "supply": "sachet", "prescriber": "Dr Lim Wei Ming", "start": "2024-02-10" },
+    { "id": "o-lim-amlo", "rid": "r-lim", "drug": "Amlodipine", "dose": "10 mg tablet", "route": "Oral", "slots": ["08:00"], "indication": "Hypertension", "classes": ["ccb"], "supply": "sachet", "check": { "field": "sbp", "label": "Systolic BP", "unit": "mmHg", "holdBelow": 100 }, "prescriber": "Dr Lim Wei Ming", "start": "2023-06-02" },
+    { "id": "o-lim-ator", "rid": "r-lim", "drug": "Atorvastatin", "dose": "40 mg tablet", "route": "Oral", "slots": ["22:00"], "indication": "Cholesterol", "classes": ["statin"], "supply": "sachet", "prescriber": "Dr Lim Wei Ming", "start": "2023-06-02" },
+    { "id": "o-lim-gluc", "rid": "r-lim", "drug": "Glucose 40% oral gel", "dose": "15 g", "route": "Oral", "slots": [], "prn": { "reason": "CBG below 4 mmol/L", "minHours": 0.25, "maxPer24h": 4 }, "classes": ["glucose"], "supply": "pack", "prescriber": "Dr Lim Wei Ming", "start": "2025-11-03" },
+
+    { "id": "o-muthu-sine", "rid": "r-muthu", "drug": "Co-careldopa (Sinemet 25/100)", "dose": "1 tablet, dispersed", "route": "Oral", "slots": ["08:00", "12:00", "18:00"], "indication": "Parkinson's disease", "classes": ["dopaminergic"], "supply": "sachet", "timeCritical": true, "instructions": "Time-critical: give within 30 minutes. Disperse in water, thicken to IDDSI 2.", "prescriber": "Dr Lim Wei Ming", "start": "2022-01-17" },
+    { "id": "o-muthu-omep", "rid": "r-muthu", "drug": "Omeprazole MUPS", "dose": "20 mg tablet, dispersed", "route": "Oral", "slots": ["08:00"], "indication": "Stomach protection", "classes": ["ppi"], "supply": "sachet", "prescriber": "Dr Lim Wei Ming", "start": "2022-01-17" },
+    { "id": "o-muthu-lact", "rid": "r-muthu", "drug": "Lactulose", "dose": "15 mL", "route": "Oral", "slots": ["22:00"], "indication": "Constipation", "classes": ["laxative"], "supply": "pack", "prescriber": "Dr Lim Wei Ming", "start": "2022-01-17" },
+
+    { "id": "o-wong-mst", "rid": "r-wong", "drug": "Morphine sulfate MR (MST Continus)", "dose": "10 mg tablet", "route": "Oral", "slots": ["08:00", "20:00"], "indication": "Chronic pain", "classes": ["opioid"], "supply": "pack", "cd": true, "stockUnit": "tablets", "instructions": "Do not crush. Abbey pain score before each dose.", "prescriber": "Dr Lim Wei Ming", "start": "2026-08-30" },
+    { "id": "o-wong-para", "rid": "r-wong", "drug": "Paracetamol", "dose": "1 g (2 × 500 mg)", "route": "Oral", "slots": ["08:00", "12:00", "18:00", "22:00"], "indication": "Pain", "classes": ["paracetamol"], "supply": "sachet", "prescriber": "Dr Lim Wei Ming", "start": "2025-03-12" },
+    { "id": "o-wong-morprn", "rid": "r-wong", "drug": "Morphine oral solution 10 mg/5 mL", "dose": "2.5 mg (1.25 mL)", "route": "Oral", "slots": [], "prn": { "reason": "Breakthrough pain", "minHours": 4, "maxPer24h": 4 }, "classes": ["opioid"], "supply": "pack", "cd": true, "stockUnit": "mL", "prescriber": "Dr Lim Wei Ming", "start": "2026-08-30" },
+
+    { "id": "o-siti-digo", "rid": "r-siti", "drug": "Digoxin", "dose": "62.5 mcg tablet", "route": "Oral", "slots": ["08:00"], "indication": "Atrial fibrillation", "classes": ["cardiac-glycoside"], "supply": "sachet", "check": { "field": "pulse", "label": "Apical pulse", "unit": "/min", "holdBelow": 60 }, "prescriber": "Dr Lim Wei Ming", "start": "2024-02-12" },
+    { "id": "o-siti-furo", "rid": "r-siti", "drug": "Furosemide", "dose": "40 mg tablet", "route": "Oral", "slots": ["08:00"], "indication": "Heart failure", "classes": ["loop-diuretic"], "supply": "sachet", "instructions": "Weigh before breakfast.", "prescriber": "Dr Lim Wei Ming", "start": "2024-02-12" },
+    { "id": "o-siti-biso", "rid": "r-siti", "drug": "Bisoprolol", "dose": "2.5 mg tablet", "route": "Oral", "slots": ["08:00"], "indication": "Heart failure, rate control", "classes": ["beta-blocker"], "supply": "sachet", "check": { "field": "pulse", "label": "Apical pulse", "unit": "/min", "holdBelow": 60 }, "prescriber": "Dr Lim Wei Ming", "start": "2024-02-12" },
+    { "id": "o-siti-warf", "rid": "r-siti", "drug": "Warfarin", "dose": "3 mg tablet", "route": "Oral", "slots": ["18:00"], "indication": "Atrial fibrillation (stroke prevention)", "classes": ["anticoagulant"], "supply": "pack", "highAlert": true, "instructions": "Last INR 2.4 on 21 Oct (target 2–3). Next INR 28 Oct.", "prescriber": "Dr Lim Wei Ming", "start": "2024-02-12" },
+
+    { "id": "o-goh-amlo", "rid": "r-goh", "drug": "Amlodipine", "dose": "5 mg tablet", "route": "Oral", "slots": ["08:00"], "indication": "Hypertension", "classes": ["ccb"], "supply": "sachet", "check": { "field": "sbp", "label": "Systolic BP", "unit": "mmHg", "holdBelow": 100 }, "prescriber": "Dr Lim Wei Ming", "start": "2023-11-20" },
+    { "id": "o-goh-para", "rid": "r-goh", "drug": "Paracetamol", "dose": "1 g (2 × 500 mg)", "route": "Oral", "slots": [], "prn": { "reason": "Fever above 38 °C or pain", "minHours": 4, "maxPer24h": 4 }, "classes": ["paracetamol"], "supply": "pack", "prescriber": "Dr Lim Wei Ming", "start": "2026-10-14" },
+
+    { "id": "o-chua-alen", "rid": "r-chua", "drug": "Alendronate", "dose": "70 mg tablet (weekly, Saturday)", "route": "Oral", "slots": ["08:00"], "indication": "Osteoporosis", "classes": ["bisphosphonate"], "supply": "pack", "weekly": 6, "instructions": "Give 30 minutes before breakfast with a full glass of water. Keep upright for 30 minutes. No calcium within 2 hours.", "prescriber": "Dr Lim Wei Ming", "start": "2022-07-01" },
+    { "id": "o-chua-sert", "rid": "r-chua", "drug": "Sertraline", "dose": "50 mg tablet", "route": "Oral", "slots": ["08:00"], "indication": "Depression", "classes": ["ssri"], "supply": "sachet", "prescriber": "Dr Lim Wei Ming", "start": "2023-01-09" },
+    { "id": "o-chua-calc", "rid": "r-chua", "drug": "Calcium carbonate + vitamin D3", "dose": "1 tablet", "route": "Oral", "slots": ["12:00"], "indication": "Osteoporosis", "classes": ["calcium"], "supply": "sachet", "instructions": "Kept at noon, away from alendronate.", "prescriber": "Dr Lim Wei Ming", "start": "2022-07-01" },
+
+    { "id": "o-tan-aspi", "rid": "r-tan", "drug": "Aspirin", "dose": "100 mg tablet", "route": "Oral", "slots": ["08:00"], "indication": "Stroke prevention", "classes": ["salicylate", "antiplatelet"], "supply": "sachet", "prescriber": "Dr Lim Wei Ming", "start": "2026-09-14" },
+    { "id": "o-tan-amlo", "rid": "r-tan", "drug": "Amlodipine", "dose": "5 mg tablet", "route": "Oral", "slots": ["08:00"], "indication": "Hypertension", "classes": ["ccb"], "supply": "sachet", "check": { "field": "sbp", "label": "Systolic BP", "unit": "mmHg", "holdBelow": 100 }, "prescriber": "Dr Lim Wei Ming", "start": "2026-09-14" },
+    { "id": "o-tan-clar", "rid": "r-tan", "drug": "Clarithromycin", "dose": "500 mg tablet", "route": "Oral", "slots": ["08:00", "20:00"], "indication": "Chest infection", "classes": ["macrolide", "antibiotic"], "supply": "pack", "instructions": "Day 2 of 5. Antibiotic review due 28 Oct.", "review": "2026-10-28", "prescriber": "Dr Lim Wei Ming", "start": "2026-10-23" },
+    { "id": "o-tan-ator", "rid": "r-tan", "drug": "Atorvastatin", "dose": "20 mg tablet", "route": "Oral", "slots": ["22:00"], "indication": "Cholesterol", "classes": ["statin"], "supply": "sachet", "prescriber": "Dr Lim Wei Ming", "start": "2026-09-14" },
+    { "id": "o-tan-para", "rid": "r-tan", "drug": "Paracetamol", "dose": "1 g (2 × 500 mg)", "route": "Oral", "slots": [], "prn": { "reason": "Pain or fever above 38 °C", "minHours": 4, "maxPer24h": 4 }, "classes": ["paracetamol"], "supply": "pack", "prescriber": "Dr Lim Wei Ming", "start": "2026-09-14" },
+
+    { "id": "o-maria-levo", "rid": "r-maria", "drug": "Levothyroxine", "dose": "50 mcg tablet", "route": "Oral", "slots": ["06:00"], "indication": "Hypothyroidism", "classes": ["thyroid"], "supply": "sachet", "instructions": "Empty stomach, 30 minutes before breakfast.", "prescriber": "Dr Lim Wei Ming", "start": "2024-10-03" },
+    { "id": "o-maria-vitd", "rid": "r-maria", "drug": "Cholecalciferol (vitamin D3)", "dose": "1,000 units tablet", "route": "Oral", "slots": ["08:00"], "indication": "Bone health", "classes": ["vitamin"], "supply": "sachet", "prescriber": "Dr Lim Wei Ming", "start": "2024-10-03" },
+
+    { "id": "o-ong-tams", "rid": "r-ong", "drug": "Tamsulosin MR", "dose": "400 mcg capsule", "route": "Oral", "slots": ["22:00"], "indication": "Prostate", "classes": ["alpha-blocker"], "supply": "sachet", "prescriber": "Dr Lim Wei Ming", "start": "2023-03-28" },
+    { "id": "o-ong-amlo", "rid": "r-ong", "drug": "Amlodipine", "dose": "5 mg tablet", "route": "Oral", "slots": ["08:00"], "indication": "Hypertension", "classes": ["ccb"], "supply": "sachet", "prescriber": "Dr Lim Wei Ming", "start": "2023-03-28" },
+
+    { "id": "o-kaur-metf", "rid": "r-kaur", "ownSupply": "Brought from home, checked by Aisyah Rahman on 17 Oct (expiry, label, appearance)", "drug": "Metformin", "dose": "500 mg tablet", "route": "Oral", "slots": ["08:00", "18:00"], "indication": "Type 2 diabetes", "classes": ["biguanide"], "supply": "pack", "instructions": "Give with food.", "prescriber": "Dr Lim Wei Ming", "start": "2025-05-19" },
+    { "id": "o-kaur-glic", "rid": "r-kaur", "ownSupply": "Brought from home, checked by Aisyah Rahman on 17 Oct (expiry, label, appearance)", "drug": "Gliclazide", "dose": "40 mg tablet", "route": "Oral", "slots": ["08:00"], "indication": "Type 2 diabetes", "classes": ["sulfonylurea"], "supply": "pack", "check": { "field": "cbg", "label": "Capillary glucose", "unit": "mmol/L", "holdBelow": 4 }, "prescriber": "Dr Lim Wei Ming", "start": "2025-05-19" },
+
+    { "id": "o-ho-mema", "rid": "r-ho", "drug": "Memantine", "dose": "10 mg tablet", "route": "Oral", "slots": ["08:00"], "indication": "Dementia", "classes": ["nmda-antagonist"], "supply": "sachet", "prescriber": "Dr Lim Wei Ming", "start": "2024-08-05" },
+    { "id": "o-ho-donep", "rid": "r-ho", "drug": "Donepezil", "dose": "5 mg tablet", "route": "Oral", "slots": ["22:00"], "indication": "Dementia", "classes": ["cholinesterase-inhibitor"], "supply": "sachet", "prescriber": "Dr Lim Wei Ming", "start": "2024-08-05" },
+    { "id": "o-ho-quet", "rid": "r-ho", "drug": "Quetiapine", "dose": "12.5 mg (half tablet)", "route": "Oral", "slots": ["22:00"], "indication": "Agitation at night", "classes": ["antipsychotic"], "supply": "sachet", "instructions": "Antipsychotic: review every 3 months. Next review 5 Nov.", "review": "2026-11-05", "prescriber": "Dr Lim Wei Ming", "start": "2026-08-05" },
+
+    { "id": "o-lee-para", "rid": "r-lee", "transcribed": { "by": "s-hidayah", "t": -150, "source": "Polyclinic prescription, 2 Oct", "endorseDue": 2460 }, "drug": "Paracetamol", "dose": "1 g (2 × 500 mg)", "route": "Oral", "slots": ["08:00", "12:00", "18:00", "22:00"], "indication": "Hip pain", "classes": ["paracetamol"], "supply": "sachet", "prescriber": "Polyclinic (before admission)", "start": "2026-10-23" },
+    { "id": "o-lee-omep", "rid": "r-lee", "transcribed": { "by": "s-hidayah", "t": -150, "source": "Polyclinic prescription, 2 Oct", "endorseDue": 2460 }, "drug": "Omeprazole", "dose": "20 mg capsule", "route": "Oral", "slots": ["08:00"], "indication": "Gastric ulcer history", "classes": ["ppi"], "supply": "sachet", "prescriber": "Polyclinic (before admission)", "start": "2026-10-23" }
+  ],
+  "decoyPacks": [
+    { "barcode": "PK-WARDSTOCK-AUGMENTIN", "label": "Augmentin 625 mg (amoxicillin + clavulanate)", "drug": "Amoxicillin + clavulanate", "classes": ["penicillin", "beta-lactam", "antibiotic"], "owner": null, "note": "Ward stock, left on the trolley" },
+    { "barcode": "PK-WARDSTOCK-IBUPROFEN", "label": "Ibuprofen 200 mg tablets", "drug": "Ibuprofen", "classes": ["nsaid"], "owner": null, "note": "Ward stock" }
+  ],
+  "cdStock": [
+    { "orderId": "o-wong-mst", "balance": 24, "unit": "tablets" },
+    { "orderId": "o-wong-morprn", "balance": 82.75, "unit": "mL" }
+  ],
+  "cdLedger": [
+    { "seq": 1, "orderId": "o-wong-mst", "t": -4320, "kind": "received", "change": 28, "balance": 28, "by": "s-aisyah", "witness": "s-ramesh", "note": "Received from pharmacy, requisition RQ-2B-1043" },
+    { "seq": 2, "orderId": "o-wong-mst", "t": -3840, "kind": "given", "change": -1, "balance": 27, "by": "s-aisyah", "witness": "s-ramesh", "note": "08:00 dose" },
+    { "seq": 3, "orderId": "o-wong-mst", "t": -3120, "kind": "given", "change": -1, "balance": 26, "by": "s-grace", "witness": "s-ramesh", "note": "20:00 dose" },
+    { "seq": 4, "orderId": "o-wong-mst", "t": -960, "kind": "given", "change": -1, "balance": 25, "by": "s-aisyah", "witness": "s-ramesh", "note": "08:00 dose" },
+    { "seq": 5, "orderId": "o-wong-mst", "t": -240, "kind": "given", "change": -1, "balance": 24, "by": "s-grace", "witness": "s-faiz", "note": "20:00 dose" },
+    { "seq": 6, "orderId": "o-wong-morprn", "t": -10080, "kind": "received", "change": 100, "balance": 100, "by": "s-aisyah", "witness": "s-ramesh", "note": "Received from pharmacy, requisition RQ-2B-1011 (100 mL bottle)" },
+    { "seq": 7, "orderId": "o-wong-morprn", "t": -1200, "kind": "correction", "change": -16, "balance": 84, "by": "s-mary", "witness": "s-aisyah", "note": "Weekly stock check: 13 PRN doses (17 to 23 Oct) entered as one line for the demo" },
+    { "seq": 8, "orderId": "o-wong-morprn", "t": 330, "kind": "given", "change": -1.25, "balance": 82.75, "by": "s-hidayah", "witness": "s-faiz", "note": "PRN for Mdm Wong Mei Fong: pain on repositioning" }
+  ],
+  "administrations": [
+    { "orderId": "o-maria-levo", "slot": "06:00", "day": 0, "outcome": "given", "t": 364, "by": "s-hidayah", "scan": "sachet" },
+    { "orderId": "o-ho-quet", "slot": "22:00", "day": -1, "outcome": "refused", "reason": "Resident refused", "note": "Pushed cup away twice. Calm, settled by 23:30.", "t": -114, "by": "s-hidayah" },
+    { "orderId": "o-ho-donep", "slot": "22:00", "day": -1, "outcome": "given", "t": -110, "by": "s-hidayah" }
+  ],
+  "prn": [
+    { "id": "p-1", "orderId": "o-tan-para", "t": -140, "by": "s-hidayah", "reason": "Headache", "pain": 5, "effect": { "t": -80, "by": "s-hidayah", "text": "Pain 1/10, settled.", "result": "effective" } },
+    { "id": "p-2", "orderId": "o-wong-morprn", "t": 330, "by": "s-hidayah", "witness": "s-faiz", "reason": "Pain on repositioning", "pain": 7, "effect": { "t": 395, "by": "s-hidayah", "text": "Abbey pain score 4, more settled.", "result": "partial" } }
+  ],
+  "vitals": [
+    { "rid": "r-lim", "t": 330, "rr": 16, "spo2": 97, "o2": false, "sbp": 142, "dbp": 84, "pulse": 76, "acvpu": "A", "temp": 36.6, "by": "s-faiz" },
+    { "rid": "r-lim", "t": -1440, "rr": 16, "spo2": 98, "o2": false, "sbp": 138, "dbp": 80, "pulse": 74, "acvpu": "A", "temp": 36.7, "by": "s-faiz" },
+    { "rid": "r-muthu", "t": 340, "rr": 18, "spo2": 96, "o2": false, "sbp": 118, "dbp": 70, "pulse": 68, "acvpu": "A", "temp": 36.5, "by": "s-faiz" },
+    { "rid": "r-wong", "t": -600, "rr": 18, "spo2": 96, "o2": false, "sbp": 110, "dbp": 64, "pulse": 74, "acvpu": "V", "temp": 36.8, "by": "s-ramesh", "note": "Usual: responds to voice" },
+    { "rid": "r-wong", "t": 345, "rr": 18, "spo2": 96, "o2": false, "sbp": 104, "dbp": 62, "pulse": 76, "acvpu": "V", "temp": 36.9, "by": "s-faiz", "note": "Usual: responds to voice" },
+    { "rid": "r-siti", "t": -540, "rr": 18, "spo2": 96, "o2": false, "sbp": 128, "dbp": 76, "pulse": 70, "acvpu": "A", "temp": 36.6, "by": "s-ramesh" },
+    { "rid": "r-siti", "t": 350, "rr": 18, "spo2": 95, "o2": false, "sbp": 124, "dbp": 74, "pulse": 64, "acvpu": "A", "temp": 36.7, "by": "s-faiz" },
+    { "rid": "r-goh", "t": -1080, "rr": 18, "spo2": 96, "o2": false, "sbp": 124, "dbp": 76, "pulse": 82, "acvpu": "A", "temp": 37.0, "by": "s-ramesh" },
+    { "rid": "r-goh", "t": -600, "rr": 19, "spo2": 96, "o2": false, "sbp": 120, "dbp": 74, "pulse": 86, "acvpu": "A", "temp": 37.3, "by": "s-ramesh" },
+    { "rid": "r-goh", "t": 360, "rr": 20, "spo2": 95, "o2": false, "sbp": 118, "dbp": 72, "pulse": 92, "acvpu": "A", "temp": 37.9, "by": "s-faiz" },
+    { "rid": "r-goh", "t": 460, "rr": 23, "spo2": 94, "o2": false, "sbp": 112, "dbp": 70, "pulse": 96, "acvpu": "A", "temp": 38.2, "by": "s-ramesh", "note": "Productive cough, chest crackles right base." },
+    { "rid": "r-chua", "t": 355, "rr": 16, "spo2": 97, "o2": false, "sbp": 132, "dbp": 78, "pulse": 72, "acvpu": "A", "temp": 36.4, "by": "s-faiz" },
+    { "rid": "r-tan", "t": -840, "rr": 16, "spo2": 97, "o2": false, "sbp": 132, "dbp": 78, "pulse": 78, "acvpu": "A", "temp": 36.8, "by": "s-ramesh" },
+    { "rid": "r-tan", "t": -360, "rr": 18, "spo2": 96, "o2": false, "sbp": 128, "dbp": 76, "pulse": 84, "acvpu": "A", "temp": 37.4, "by": "s-ramesh" },
+    { "rid": "r-tan", "t": 360, "rr": 19, "spo2": 95, "o2": false, "sbp": 124, "dbp": 74, "pulse": 88, "acvpu": "A", "temp": 37.6, "by": "s-faiz" },
+    { "rid": "r-maria", "t": 365, "rr": 16, "spo2": 98, "o2": false, "sbp": 136, "dbp": 82, "pulse": 70, "acvpu": "A", "temp": 36.5, "by": "s-faiz" },
+    { "rid": "r-kaur", "t": 370, "rr": 16, "spo2": 97, "o2": false, "sbp": 138, "dbp": 80, "pulse": 78, "acvpu": "A", "temp": 36.6, "by": "s-faiz" },
+    { "rid": "r-ho", "t": 375, "rr": 17, "spo2": 97, "o2": false, "sbp": 146, "dbp": 86, "pulse": 80, "acvpu": "A", "temp": 36.6, "by": "s-faiz" },
+    { "rid": "r-lee", "t": -720, "rr": 16, "spo2": 97, "o2": false, "sbp": 134, "dbp": 80, "pulse": 80, "acvpu": "A", "temp": 36.7, "by": "s-aisyah", "note": "Admission observations." },
+    { "rid": "r-lee", "t": 380, "rr": 17, "spo2": 97, "o2": false, "sbp": 130, "dbp": 78, "pulse": 78, "acvpu": "A", "temp": 36.6, "by": "s-faiz" }
+  ],
+  "glucose": [
+    { "rid": "r-lim", "t": 450, "value": 7.8, "by": "s-ramesh", "note": "Before breakfast" },
+    { "rid": "r-lim", "t": -720, "value": 9.6, "by": "s-ramesh" },
+    { "rid": "r-kaur", "t": 455, "value": 6.9, "by": "s-ramesh", "note": "Before breakfast" }
+  ],
+  "alerts": [
+    { "id": "a-1", "rid": "r-goh", "kind": "news2", "severity": "high", "title": "NEWS2 5: urgent review", "detail": "Temp 38.2 °C, RR 23, SpO₂ 94%, pulse 96. Home policy: nurse in charge now, observations every hour, inform doctor.", "t": 460, "status": "ack", "ackBy": "s-aisyah", "ackT": 464, "dueT": 520, "dueLabel": "Next observations" },
+    { "id": "a-2", "rid": "r-ho", "kind": "refused", "severity": "low", "title": "Quetiapine refused last night", "detail": "22:00 dose refused. Calm overnight. Mention at doctor's round.", "t": -112, "status": "open" },
+    { "id": "a-3", "rid": "r-wong", "kind": "skin", "severity": "medium", "title": "Sacral wound dressing due today", "detail": "Hydrocolloid change due. Last measured 1.8 × 1.2 cm on 21 Oct.", "t": 300, "status": "open" },
+    { "id": "a-4", "rid": "r-lee", "kind": "assessment", "severity": "medium", "title": "4 admission assessments due", "detail": "Falls, pressure injury, nutrition and pain assessments are due within 48 hours of admission (by 25 Oct, 17:00).", "t": -400, "status": "open" },
+    { "id": "a-6", "rid": "r-lee", "kind": "transcription", "severity": "high", "title": "Admission medicines need RN verification", "detail": "Nur Hidayah transcribed 2 medicines at 21:30 last night. A different RN must verify them before the 08:00 doses. Doctor to endorse by 25 Oct, 17:00.", "t": -150, "status": "open" },
+    { "id": "a-5", "rid": "r-ong", "kind": "hospital", "severity": "low", "title": "In hospital: Changi General", "detail": "Ward 46, bed 12. Medicines reconciliation needed when he returns.", "t": -2600, "status": "ack", "ackBy": "s-aisyah", "ackT": -2590 }
+  ],
+  "tasks": [
+    { "id": "t-1", "rid": "r-tan", "text": "Hourly safety check (bed alarm on)", "due": 480, "repeat": "hourly", "category": "safety" },
+    { "id": "t-2", "rid": "r-tan", "text": "Observations (4-hourly while on antibiotics)", "due": 600, "category": "obs" },
+    { "id": "t-3", "rid": "r-tan", "text": "Sit out of bed with walking frame, 1 assist", "due": 600, "category": "mobility" },
+    { "id": "t-4", "rid": "r-tan", "text": "Physiotherapy session", "due": 630, "category": "therapy" },
+    { "id": "t-5", "rid": "r-goh", "text": "Observations hourly (NEWS2 5)", "due": 520, "category": "obs" },
+    { "id": "t-6", "rid": "r-goh", "text": "Fluid chart, target 1,500 mL today", "due": 900, "category": "nutrition" },
+    { "id": "t-7", "rid": "r-wong", "text": "Reposition (left side)", "due": 510, "repeat": "2-hourly", "category": "skin" },
+    { "id": "t-8", "rid": "r-wong", "text": "Change sacral dressing and measure wound", "due": 660, "category": "skin" },
+    { "id": "t-9", "rid": "r-wong", "text": "Assisted breakfast", "due": 510, "category": "nutrition" },
+    { "id": "t-10", "rid": "r-muthu", "text": "Sit upright 30 minutes after breakfast", "due": 540, "category": "safety" },
+    { "id": "t-11", "rid": "r-muthu", "text": "Bowel chart (day 3 without BO)", "due": 900, "category": "elimination" },
+    { "id": "t-12", "rid": "r-lim", "text": "Capillary glucose before lunch", "due": 690, "category": "obs" },
+    { "id": "t-13", "rid": "r-lim", "text": "Capillary glucose before breakfast", "due": 450, "category": "obs", "done": { "t": 450, "by": "s-ramesh" } },
+    { "id": "t-14", "rid": "r-siti", "text": "Weigh before breakfast", "due": 450, "category": "obs", "done": { "t": 448, "by": "s-maricel", "note": "61.8 kg (yesterday 61.5 kg)" } },
+    { "id": "t-15", "rid": "r-siti", "text": "Fluid restriction 1.2 L: keep chart", "due": 900, "category": "nutrition" },
+    { "id": "t-16", "rid": "r-chua", "text": "Keep upright 30 minutes after alendronate", "due": 510, "category": "safety" },
+    { "id": "t-17", "rid": "r-ho", "text": "Wander check every 30 minutes", "due": 510, "repeat": "30 min", "category": "safety" },
+    { "id": "t-18", "rid": "r-lee", "text": "Morse falls assessment", "due": 2460, "category": "assessment", "assessment": "morse" },
+    { "id": "t-19", "rid": "r-lee", "text": "Braden pressure injury assessment", "due": 2460, "category": "assessment", "assessment": "braden" },
+    { "id": "t-20", "rid": "r-lee", "text": "MNA-SF nutrition screen", "due": 2460, "category": "assessment", "assessment": "mna" },
+    { "id": "t-21", "rid": "r-lee", "text": "Abbey pain scale", "due": 2460, "category": "assessment", "assessment": "abbey" },
+    { "id": "t-22", "rid": "r-lee", "text": "Skin tear dressing check, left forearm", "due": 720, "category": "skin" },
+    { "id": "t-23", "rid": "r-kaur", "text": "Capillary glucose before breakfast", "due": 450, "category": "obs", "done": { "t": 455, "by": "s-ramesh" } },
+    { "id": "t-24", "rid": "r-maria", "text": "Read the daily menu to her (poor vision)", "due": 660, "category": "nutrition" }
+  ],
+  "notes": [
+    { "id": "n-1", "rid": "r-goh", "t": 462, "by": "s-ramesh", "kind": "Nursing", "text": "Feverish this morning, 38.2 °C. Productive cough with yellow sputum, crackles at right base. Sat upright, encouraged fluids. Informed Aisyah." },
+    { "id": "n-2", "rid": "r-goh", "t": 470, "by": "s-aisyah", "kind": "Nursing", "text": "Reviewed. NEWS2 5. Called Dr Lim at 07:50: will review on round at 10:00. Hourly obs, chest X-ray request if worse. Wife informed by phone." },
+    { "id": "n-3", "rid": "r-ho", "t": -100, "by": "s-hidayah", "kind": "Nursing", "text": "Refused quetiapine at 22:00, pushed cup away. Redirected with Cantonese radio, settled by 23:30. Slept through." },
+    { "id": "n-4", "rid": "r-wong", "t": 300, "by": "s-faiz", "kind": "Nursing", "text": "Repositioned 2-hourly overnight. Grimaced on turning at 05:30, morphine PRN given. Sacral dressing intact, no strike-through." },
+    { "id": "n-5", "rid": "r-tan", "t": 365, "by": "s-faiz", "kind": "Nursing", "text": "Slept well. Temp 37.6 °C at 06:00, settled. Bed alarm on, used call bell once to toilet with help." },
+    { "id": "n-6", "rid": "r-lee", "t": -700, "by": "s-aisyah", "kind": "Admission", "text": "Admitted from home with son. Oriented, anxious. Skin tear left forearm 2 cm, dressed. NSAID allergy confirmed with son (gastric bleed 2024). Admission assessments booked." },
+    { "id": "n-7", "rid": "r-muthu", "t": 350, "by": "s-faiz", "kind": "Nursing", "text": "Slept well. No bowel movement for 3 days, abdomen soft. Lactulose given at 22:00." }
+  ],
+  "assessments": [
+    { "id": "as-1", "rid": "r-tan", "type": "morse", "score": 55, "t": -14000, "by": "s-ramesh", "signedBy": "s-aisyah" },
+    { "id": "as-2", "rid": "r-tan", "type": "braden", "score": 17, "t": -14000, "by": "s-ramesh", "signedBy": "s-aisyah" },
+    { "id": "as-3", "rid": "r-tan", "type": "mna", "score": 10, "t": -13900, "by": "s-ramesh", "signedBy": "s-aisyah" },
+    { "id": "as-4", "rid": "r-wong", "type": "braden", "score": 10, "t": -4300, "by": "s-aisyah", "signedBy": "s-aisyah" },
+    { "id": "as-5", "rid": "r-wong", "type": "abbey", "score": 6, "t": 300, "by": "s-faiz", "signedBy": "s-hidayah" },
+    { "id": "as-6", "rid": "r-wong", "type": "mna", "score": 7, "t": -20000, "by": "s-aisyah", "signedBy": "s-aisyah" },
+    { "id": "as-7", "rid": "r-muthu", "type": "morse", "score": 35, "t": -30000, "by": "s-ramesh", "signedBy": "s-aisyah" },
+    { "id": "as-8", "rid": "r-muthu", "type": "braden", "score": 13, "t": -30000, "by": "s-ramesh", "signedBy": "s-aisyah" },
+    { "id": "as-9", "rid": "r-siti", "type": "morse", "score": 45, "t": -25000, "by": "s-ramesh", "signedBy": "s-aisyah" },
+    { "id": "as-10", "rid": "r-goh", "type": "morse", "score": 40, "t": -21000, "by": "s-ramesh", "signedBy": "s-aisyah" },
+    { "id": "as-11", "rid": "r-chua", "type": "morse", "score": 50, "t": -28000, "by": "s-ramesh", "signedBy": "s-aisyah" },
+    { "id": "as-12", "rid": "r-ho", "type": "morse", "score": 45, "t": -26000, "by": "s-ramesh", "signedBy": "s-aisyah" },
+    { "id": "as-13", "rid": "r-lim", "type": "morse", "score": 25, "t": -27000, "by": "s-ramesh", "signedBy": "s-aisyah" },
+    { "id": "as-14", "rid": "r-kaur", "type": "morse", "score": 35, "t": -24000, "by": "s-ramesh", "signedBy": "s-aisyah" },
+    { "id": "as-15", "rid": "r-maria", "type": "morse", "score": 30, "t": -23000, "by": "s-ramesh", "signedBy": "s-aisyah" }
+  ],
+  "carePlans": [
+    { "rid": "r-tan", "signedBy": "s-aisyah", "signedT": -13800, "reviewDue": "2026-11-10", "problems": [
+      { "id": "cp-tan-1", "title": "High risk of falls", "basis": "Morse 55 on 15 Sep", "goal": "No falls with injury", "interventions": ["Bed alarm on at all times", "Hourly checks at night", "Walking frame within reach", "Physiotherapy twice weekly", "Non-slip socks"] },
+      { "id": "cp-tan-2", "title": "Left-sided weakness after stroke", "basis": "Stroke, Aug 2026", "goal": "Keeps current independence with eating and transfers", "interventions": ["1 assist for transfers, approach from right side", "Plate guard at meals", "Daily range-of-motion exercises"] },
+      { "id": "cp-tan-3", "title": "Chest infection", "basis": "Started 23 Oct", "goal": "Temperature normal within 72 hours", "interventions": ["Observations 4-hourly", "Encourage 1.5 L fluids", "Sit upright for meals", "Antibiotic review on 28 Oct"] },
+      { "id": "cp-tan-4", "title": "Communication", "basis": "Speaks Hokkien and Mandarin", "goal": "Understands her care and can say what she needs", "interventions": ["Use Hokkien where possible", "Picture board at bedside", "Update daughter Mei Ling weekly"] }
+    ]},
+    { "rid": "r-goh", "signedBy": "s-aisyah", "signedT": -11000, "reviewDue": "2026-11-20", "problems": [
+      { "id": "cp-goh-1", "title": "Risk of aspiration", "basis": "Aspiration pneumonia, 9 Oct", "goal": "No further chest infections", "interventions": ["Upright 30 minutes after meals", "Soft diet", "Supervise at meals", "Mouth care twice a day"] },
+      { "id": "cp-goh-2", "title": "Moderate risk of falls", "basis": "Morse 40", "goal": "No falls", "interventions": ["Walking frame", "Call bell within reach"] }
+    ]},
+    { "rid": "r-wong", "signedBy": "s-aisyah", "signedT": -4200, "reviewDue": "2026-11-01", "problems": [
+      { "id": "cp-wong-1", "title": "Sacral pressure injury (category 2)", "basis": "Braden 10", "goal": "Wound smaller each week, no new injuries", "interventions": ["Reposition 2-hourly, 30° tilt", "Alternating air mattress", "Hydrocolloid dressing every 3 days", "Skin check each shift"] },
+      { "id": "cp-wong-2", "title": "Pain, unable to say", "basis": "Abbey pain scale", "goal": "Abbey score below 8", "interventions": ["Abbey score before each morphine dose", "Regular paracetamol", "PRN morphine for breakthrough pain"] },
+      { "id": "cp-wong-3", "title": "Malnutrition", "basis": "MNA-SF 7", "goal": "Weight stable", "interventions": ["Assisted feeding", "Oral supplement twice a day", "Weekly weight"] }
+    ]},
+    { "rid": "r-muthu", "signedBy": "s-aisyah", "signedT": -29000, "reviewDue": "2026-11-15", "problems": [
+      { "id": "cp-muthu-1", "title": "Parkinson's: time-critical medicines", "basis": "Diagnosis", "goal": "Doses on time, steady movement", "interventions": ["Co-careldopa within 30 minutes of due time", "Never stop suddenly"] },
+      { "id": "cp-muthu-2", "title": "Unsafe swallow", "basis": "Speech therapy, Jan 2026", "goal": "No choking or chest infection", "interventions": ["IDDSI 5 diet, IDDSI 2 fluids", "Disperse tablets", "Upright for all intake"] }
+    ]},
+    { "rid": "r-siti", "signedBy": "s-aisyah", "signedT": -24000, "reviewDue": "2026-11-12", "problems": [
+      { "id": "cp-siti-1", "title": "Heart failure", "basis": "Diagnosis", "goal": "No fluid overload", "interventions": ["Daily weight before breakfast, report gain over 1 kg in 2 days", "Fluid limit 1.2 L", "Low-salt diet"] },
+      { "id": "cp-siti-2", "title": "On warfarin", "basis": "Atrial fibrillation", "goal": "INR 2–3, no bleeding", "interventions": ["INR weekly", "Report bruising or black stools"] }
+    ]},
+    { "rid": "r-lee", "signedBy": null, "signedT": null, "reviewDue": null, "problems": [
+      { "id": "cp-lee-1", "title": "Settling in after admission", "basis": "Admitted 23 Oct", "goal": "Feels safe and settled within 2 weeks", "interventions": ["Introduce key worker", "Daily check-in with son for first week"] }
+    ]}
+  ],
+  "wounds": [
+    { "id": "w-1", "rid": "r-wong", "site": "Sacrum", "type": "Pressure injury, category 2", "found": "2026-10-11", "dressing": "Hydrocolloid, change every 3 days", "nextDressing": 660, "measurements": [
+      { "t": -18720, "length": 2.4, "width": 1.8, "depth": 0.1, "bed": "Granulating 80%, slough 20%", "exudate": "Moderate", "by": "s-aisyah" },
+      { "t": -14400, "length": 2.1, "width": 1.6, "depth": 0.1, "bed": "Granulating 90%", "exudate": "Low", "by": "s-aisyah" },
+      { "t": -4320, "length": 1.8, "width": 1.2, "depth": 0.1, "bed": "Granulating 100%", "exudate": "Low", "by": "s-ramesh" }
+    ]},
+    { "id": "w-2", "rid": "r-lee", "site": "Left forearm", "type": "Skin tear (ISTAP type 2)", "found": "2026-10-23", "dressing": "Silicone mesh, leave 5 days, mark arrow", "nextDressing": 5760, "measurements": [
+      { "t": -700, "length": 2.0, "width": 0.8, "depth": 0, "bed": "Flap partly viable", "exudate": "Low", "by": "s-aisyah" }
+    ]}
+  ],
+  "handovers": [
+    { "id": "h-1", "shift": "night", "t": 425, "from": "s-hidayah", "to": "s-aisyah", "summary": "Quiet night. Goh Kim Huat febrile 37.9 at 06:00, watch. Ho Peng refused quetiapine. Wong Mei Fong PRN morphine at 05:30." }
+  ],
+  "audit": [
+    { "t": -114, "by": "s-hidayah", "action": "Dose refused", "rid": "r-ho", "detail": "Quetiapine 12.5 mg, 22:00 dose. Reason: resident refused." },
+    { "t": -110, "by": "s-hidayah", "action": "Dose given", "rid": "r-ho", "detail": "Donepezil 5 mg, 22:00 dose." },
+    { "t": 330, "by": "s-hidayah", "action": "PRN given", "rid": "r-wong", "detail": "Morphine oral solution 2.5 mg. Witness: Faiz Rahim (EN). CD register: 84 → 82.75 mL." },
+    { "t": 364, "by": "s-hidayah", "action": "Dose given", "rid": "r-maria", "detail": "Levothyroxine 50 mcg, 06:00 dose. Sachet scanned." },
+    { "t": 425, "by": "s-hidayah", "action": "Handover signed", "rid": null, "detail": "Night to AM shift. Received by Aisyah Rahman (RN)." },
+    { "t": 460, "by": "s-ramesh", "action": "Observations recorded", "rid": "r-goh", "detail": "NEWS2 5 (medium risk). Alert raised to nurse in charge." },
+    { "t": 464, "by": "s-aisyah", "action": "Alert acknowledged", "rid": "r-goh", "detail": "NEWS2 5: urgent review." }
+  ]
+}

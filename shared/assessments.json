@@ -1,0 +1,82 @@
+{
+  "morse": {
+    "name": "Morse Fall Scale",
+    "short": "Falls",
+    "minutes": 3,
+    "items": [
+      { "id": "history", "label": "History of falling (immediate or within 3 months)", "options": [{ "label": "No", "score": 0 }, { "label": "Yes", "score": 25 }] },
+      { "id": "secondary", "label": "Secondary diagnosis (more than one medical diagnosis)", "options": [{ "label": "No", "score": 0 }, { "label": "Yes", "score": 15 }] },
+      { "id": "aid", "label": "Ambulatory aid", "options": [{ "label": "None, bed rest or nurse assists", "score": 0 }, { "label": "Crutches, stick or walking frame", "score": 15 }, { "label": "Holds on to furniture", "score": 30 }] },
+      { "id": "iv", "label": "IV line or heparin lock", "options": [{ "label": "No", "score": 0 }, { "label": "Yes", "score": 20 }] },
+      { "id": "gait", "label": "Gait", "options": [{ "label": "Normal, bed rest or wheelchair", "score": 0 }, { "label": "Weak", "score": 10 }, { "label": "Impaired", "score": 20 }] },
+      { "id": "mental", "label": "Mental status", "options": [{ "label": "Knows own ability", "score": 0 }, { "label": "Overestimates or forgets limits", "score": 15 }] }
+    ],
+    "bands": [
+      { "min": 0, "max": 24, "label": "Low risk", "level": "low" },
+      { "min": 25, "max": 44, "label": "Moderate risk", "level": "medium" },
+      { "min": 45, "max": 125, "label": "High risk", "level": "high" }
+    ],
+    "suggest": { "high": ["Bed or chair alarm on", "Hourly checks at night", "Walking aid within reach", "Physiotherapy referral", "Non-slip footwear", "Call bell within reach"], "medium": ["Walking aid within reach", "Call bell within reach", "Non-slip footwear"] }
+  },
+  "braden": {
+    "name": "Braden Scale",
+    "short": "Pressure injury",
+    "minutes": 4,
+    "lowerIsWorse": true,
+    "items": [
+      { "id": "sensory", "label": "Sensory perception", "options": [{ "label": "Completely limited", "score": 1 }, { "label": "Very limited", "score": 2 }, { "label": "Slightly limited", "score": 3 }, { "label": "No impairment", "score": 4 }] },
+      { "id": "moisture", "label": "Moisture", "options": [{ "label": "Constantly moist", "score": 1 }, { "label": "Very moist", "score": 2 }, { "label": "Occasionally moist", "score": 3 }, { "label": "Rarely moist", "score": 4 }] },
+      { "id": "activity", "label": "Activity", "options": [{ "label": "Bedfast", "score": 1 }, { "label": "Chairfast", "score": 2 }, { "label": "Walks occasionally", "score": 3 }, { "label": "Walks frequently", "score": 4 }] },
+      { "id": "mobility", "label": "Mobility", "options": [{ "label": "Completely immobile", "score": 1 }, { "label": "Very limited", "score": 2 }, { "label": "Slightly limited", "score": 3 }, { "label": "No limitation", "score": 4 }] },
+      { "id": "nutrition", "label": "Nutrition", "options": [{ "label": "Very poor", "score": 1 }, { "label": "Probably inadequate", "score": 2 }, { "label": "Adequate", "score": 3 }, { "label": "Excellent", "score": 4 }] },
+      { "id": "friction", "label": "Friction and shear", "options": [{ "label": "Problem", "score": 1 }, { "label": "Potential problem", "score": 2 }, { "label": "No apparent problem", "score": 3 }] }
+    ],
+    "bands": [
+      { "min": 0, "max": 12, "label": "High risk", "level": "high" },
+      { "min": 13, "max": 14, "label": "Moderate risk", "level": "medium" },
+      { "min": 15, "max": 18, "label": "Mild risk", "level": "low" },
+      { "min": 19, "max": 23, "label": "No risk", "level": "none" }
+    ],
+    "suggest": { "high": ["Reposition 2-hourly", "Pressure-relieving mattress", "Skin check each shift", "Dietitian referral"], "medium": ["Reposition 3-hourly", "Skin check each shift"], "low": ["Skin check daily"] }
+  },
+  "mna": {
+    "name": "Mini Nutritional Assessment (MNA-SF)",
+    "short": "Nutrition",
+    "minutes": 3,
+    "lowerIsWorse": true,
+    "items": [
+      { "id": "intake", "label": "Food intake declined over the past 3 months?", "options": [{ "label": "Severe decrease", "score": 0 }, { "label": "Moderate decrease", "score": 1 }, { "label": "No decrease", "score": 2 }] },
+      { "id": "weight", "label": "Weight loss in the past 3 months", "options": [{ "label": "More than 3 kg", "score": 0 }, { "label": "Does not know", "score": 1 }, { "label": "1 to 3 kg", "score": 2 }, { "label": "No weight loss", "score": 3 }] },
+      { "id": "mobility", "label": "Mobility", "options": [{ "label": "Bed or chair bound", "score": 0 }, { "label": "Gets out of bed, does not go out", "score": 1 }, { "label": "Goes out", "score": 2 }] },
+      { "id": "stress", "label": "Psychological stress or acute illness in the past 3 months", "options": [{ "label": "Yes", "score": 0 }, { "label": "No", "score": 2 }] },
+      { "id": "neuro", "label": "Neuropsychological problems", "options": [{ "label": "Severe dementia or depression", "score": 0 }, { "label": "Mild dementia", "score": 1 }, { "label": "None", "score": 2 }] },
+      { "id": "bmi", "label": "Body mass index (kg/m²)", "options": [{ "label": "Below 19", "score": 0 }, { "label": "19 to under 21", "score": 1 }, { "label": "21 to under 23", "score": 2 }, { "label": "23 or more", "score": 3 }] }
+    ],
+    "bands": [
+      { "min": 0, "max": 7, "label": "Malnourished", "level": "high" },
+      { "min": 8, "max": 11, "label": "At risk of malnutrition", "level": "medium" },
+      { "min": 12, "max": 14, "label": "Normal nutrition", "level": "none" }
+    ],
+    "suggest": { "high": ["Dietitian referral", "Food and fluid chart", "Weekly weight", "Oral supplement (needs doctor's order)"], "medium": ["Food and fluid chart", "Weekly weight"] }
+  },
+  "abbey": {
+    "name": "Abbey Pain Scale",
+    "short": "Pain",
+    "minutes": 2,
+    "items": [
+      { "id": "vocal", "label": "Vocalisation (whimpering, groaning, crying)", "options": [{ "label": "Absent", "score": 0 }, { "label": "Mild", "score": 1 }, { "label": "Moderate", "score": 2 }, { "label": "Severe", "score": 3 }] },
+      { "id": "face", "label": "Facial expression (tense, frowning, grimacing)", "options": [{ "label": "Absent", "score": 0 }, { "label": "Mild", "score": 1 }, { "label": "Moderate", "score": 2 }, { "label": "Severe", "score": 3 }] },
+      { "id": "body", "label": "Change in body language (fidgeting, guarding)", "options": [{ "label": "Absent", "score": 0 }, { "label": "Mild", "score": 1 }, { "label": "Moderate", "score": 2 }, { "label": "Severe", "score": 3 }] },
+      { "id": "behaviour", "label": "Behavioural change (confusion, refusing food)", "options": [{ "label": "Absent", "score": 0 }, { "label": "Mild", "score": 1 }, { "label": "Moderate", "score": 2 }, { "label": "Severe", "score": 3 }] },
+      { "id": "physio", "label": "Physiological change (temperature, pulse, BP, sweating)", "options": [{ "label": "Absent", "score": 0 }, { "label": "Mild", "score": 1 }, { "label": "Moderate", "score": 2 }, { "label": "Severe", "score": 3 }] },
+      { "id": "physical", "label": "Physical change (skin tears, pressure areas, arthritis)", "options": [{ "label": "Absent", "score": 0 }, { "label": "Mild", "score": 1 }, { "label": "Moderate", "score": 2 }, { "label": "Severe", "score": 3 }] }
+    ],
+    "bands": [
+      { "min": 0, "max": 2, "label": "No pain", "level": "none" },
+      { "min": 3, "max": 7, "label": "Mild pain", "level": "low" },
+      { "min": 8, "max": 13, "label": "Moderate pain", "level": "medium" },
+      { "min": 14, "max": 18, "label": "Severe pain", "level": "high" }
+    ],
+    "suggest": { "high": ["Doctor review of pain relief today", "Pain score 4-hourly"], "medium": ["Doctor review of pain relief", "Pain score 4-hourly"], "low": ["Pain score each shift"] }
+  }
+}
