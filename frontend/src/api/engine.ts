@@ -1,11 +1,13 @@
 // In-browser backend for demo mode. It mirrors the FastAPI actions in
 // backend/app/actions.py so the app behaves the same with or without a server.
 import seed from '../../../shared/seed.json'
+import seed3a from '../../../shared/seed-3a.json'
 import {
   ASSESSMENTS, ESCALATION, allergyClash, awaitingVerification, isRn, rnOnly, band, canGiveMeds, checkAdvice, findAdmin, fullName, needsWitness,
   news2, news2Risk, prnStatus, residentOf, verifyScan, type VitalsInput,
 } from '../domain/clinical'
-import type { ActionResult, Alert, Role, Snapshot, Staff, Task } from '../domain/types'
+import { closeBlockers, harmOf, needsNeuro, neuroChanged, onBloodThinner, postFallTasks, typeLabel } from '../domain/incidents'
+import type { ActionResult, Alert, HarmLevel, Incident, Neuro, Role, Snapshot, Staff, Task, Ward } from '../domain/types'
 
 export const DEMO_PIN = '1234'
 
@@ -30,9 +32,15 @@ function fnv(str: string) {
   return (h >>> 0).toString(16).padStart(8, '0')
 }
 
-export function initialState(): EngineState {
+/** The demo home: Ward 2B (shared/seed.json, which also holds the home, shifts and staff) and Ward 3A. */
+const WARD_SEEDS: Record<string, any>[] = [seed, seed3a]
+export const DEMO_WARDS: Ward[] = WARD_SEEDS.map((w) => w.ward)
+
+export function initialState(wardId = DEMO_WARDS[0].id): EngineState {
   const day = todaySG()
-  const raw = structuredClone(seed) as unknown as Record<string, any>
+  const home = seed as unknown as Record<string, any>
+  const raw = structuredClone({ ...home, ...WARD_SEEDS.find((w) => w.ward.id === wardId)! }) as Record<string, any>
+  raw.clockStart = home.clockStart
   const vitals = raw.vitals.map((v: any, i: number) => ({ ...v, id: `v-${i}`, news2: news2(v) }))
   const cdStock: Snapshot['cdStock'] = {}
   for (const c of raw.cdStock) cdStock[c.orderId] = { balance: c.balance, unit: c.unit }
@@ -41,7 +49,7 @@ export function initialState(): EngineState {
     now: raw.clockStart,
     home: raw.home,
     ward: raw.ward,
-    staff: raw.staff,
+    staff: home.staff.filter((x: any) => x.wards.includes(wardId)),
     residents: raw.residents,
     orders: raw.orders,
     decoyPacks: raw.decoyPacks,
@@ -61,6 +69,7 @@ export function initialState(): EngineState {
     wounds: raw.wounds,
     handovers: raw.handovers,
     sbar: [],
+    incidents: raw.incidents ?? [],
     audit: [],
   }
   const st: EngineState = { snap, clockBase: raw.clockStart, realAnchor: Date.now(), seq: 0 }
@@ -290,7 +299,16 @@ const ACTIONS: Record<string, { roles: Role[] | 'any'; run: Handler }> = {
       if (Object.values(v).some((x) => typeof x === 'number' && Number.isNaN(x))) return fail('invalid', 'Fill in every reading.')
       const score = news2(v)
       const risk = news2Risk(v)
-      s.vitals.push({ ...v, id: uid('v'), rid: r.id, dbp: +b.dbp, t: s.now, by: me.id, note: b.note, news2: score })
+      const neuro: Neuro | undefined = b.neuro ? { gcs: +b.neuro.gcs, pupils: b.neuro.pupils, limbs: b.neuro.limbs } : undefined
+      if (neuro && (Number.isNaN(neuro.gcs) || neuro.gcs < 3 || neuro.gcs > 15)) return fail('invalid', 'GCS is a score from 3 to 15.')
+      const baseline = s.vitals.filter((x) => x.rid === r.id && x.neuro).sort((a, b2) => a.t - b2.t)[0]?.neuro
+      s.vitals.push({ ...v, id: uid('v'), rid: r.id, dbp: +b.dbp, t: s.now, by: me.id, note: b.note, news2: score, neuro })
+      if (neuro && neuroChanged(neuro, baseline)) {
+        raise(st, {
+          rid: r.id, kind: 'neuro', severity: 'high', title: 'Neuro signs changed after a fall',
+          detail: `GCS ${neuro.gcs}${baseline ? ` (was ${baseline.gcs})` : ''}, pupils ${neuro.pupils}, limbs ${neuro.limbs}. Call the doctor now and consider an ambulance (995).`,
+        })
+      }
       const pol = ESCALATION[risk]
       let alertId: string | undefined
       for (const a of s.alerts) if (a.rid === r.id && a.kind === 'news2' && a.status !== 'resolved') { a.status = 'resolved'; a.resolvedBy = me.id; a.resolvedT = s.now }
@@ -303,7 +321,10 @@ const ACTIONS: Record<string, { roles: Role[] | 'any'; run: Handler }> = {
         })
         alertId = al.id
       }
-      const obsTask = s.tasks.find((t) => !t.done && t.rid === r.id && t.category === 'obs' && t.due <= s.now + 60 && !t.text.toLowerCase().includes('glucose'))
+      // A neuro observation task is only done when the neuro check was recorded too.
+      const obsTask = s.tasks
+        .filter((t) => !t.done && t.rid === r.id && t.category === 'obs' && t.due <= s.now + 60 && !t.text.toLowerCase().includes('glucose') && (neuro || !t.text.includes('neuro obs')))
+        .sort((a, b2) => a.due - b2.due)[0]
       if (obsTask) obsTask.done = { t: s.now, by: me.id }
       if (pol.obsEveryMin <= 60) s.tasks.push({ id: uid('t'), rid: r.id, text: `Observations (NEWS2 ${score})`, due: s.now + pol.obsEveryMin, category: 'obs' })
       appendAudit(st, me.id, 'Observations recorded', r.id, `NEWS2 ${score} (${pol.label.toLowerCase()} risk).${pol.alert ? ' Alert raised to nurse in charge.' : ''}`)
@@ -341,6 +362,92 @@ const ACTIONS: Record<string, { roles: Role[] | 'any'; run: Handler }> = {
       st.snap.sbar.unshift({ id: uid('sb'), rid: b.rid, t: st.snap.now, by: me.id, to: b.to, text: b.text })
       st.snap.notes.push({ id: uid('n'), rid: b.rid, t: st.snap.now, by: me.id, kind: 'SBAR to doctor', text: b.text })
       appendAudit(st, me.id, 'SBAR sent', b.rid, `To ${staff(st, b.to)?.name ?? 'doctor'}. Drafted by assistant, checked and signed by ${me.name}.`)
+      return { ok: true }
+    },
+  },
+
+  'incident.report': {
+    roles: ['RN', 'EN', 'CA', 'NM'],
+    run: (st, me, b) => {
+      const s = st.snap
+      const r = residentOf(s, b.rid)
+      if (!r) return fail('invalid', 'Choose the resident involved.')
+      if (!b.type) return fail('invalid', 'Choose what happened.')
+      if (!b.what?.trim()) return fail('invalid', 'Describe what you saw.')
+      if (!b.harm) return fail('invalid', 'Choose the level of harm.')
+      const t = Math.min(s.now, b.t ?? s.now)
+      let fall: Incident['fall']
+      if (b.type === 'fall') {
+        const f = { witnessed: !!b.fall?.witnessed, headStrike: b.fall?.headStrike ?? 'not sure', bloodThinner: onBloodThinner(s, r.id) }
+        fall = { ...f, neuroObs: needsNeuro(f) }
+      }
+      const told: Incident['told'] = {}
+      if (b.familyTold) told.family = { t: s.now, by: me.id, who: r.decisionMaker.name, how: 'Told when reporting' }
+      if (b.doctorTold) told.doctor = { t: s.now, by: me.id, who: 'Visiting doctor', how: 'Told when reporting' }
+      const inc: Incident = {
+        id: uid('inc'), rid: r.id, type: b.type, t, reportedT: s.now, by: me.id, where: b.where ?? '', what: b.what.trim(), injury: b.injury ?? 'None',
+        harm: +b.harm as HarmLevel, action: b.action ?? '', fall, told, status: 'open', mohDue: b.type === 'abuse' ? s.now + 72 * 60 : undefined,
+      }
+      s.incidents.unshift(inc)
+      if (fall) {
+        for (const x of postFallTasks(inc)) if (x.due > s.now - 15) s.tasks.push({ id: uid('t'), rid: r.id, text: x.text, due: x.due, category: 'obs' })
+        s.tasks.push({ id: uid('t'), rid: r.id, text: 'Reassess pain after the fall', due: s.now + 240, category: 'assessment', assessment: 'abbey' })
+        s.tasks.push({ id: uid('t'), rid: r.id, text: 'Reassess falls risk after the fall', due: s.now + 1440, category: 'assessment', assessment: 'morse' })
+      }
+      const h = harmOf(inc.harm)
+      raise(st, {
+        rid: r.id, kind: 'incident', severity: inc.harm <= 2 || inc.type === 'abuse' ? 'high' : inc.harm === 3 || fall ? 'medium' : 'low',
+        title: `${typeLabel(inc.type)} reported: ${r.preferred}`,
+        detail: `${h.label}. ${inc.what}${inc.type === 'abuse' ? ' MOH must be notified within 72 hours by the Head of Nursing or a key appointment holder.' : ''}`,
+        dueT: inc.type === 'abuse' ? inc.mohDue : s.now + 72 * 60, dueLabel: inc.type === 'abuse' ? 'MOH notification' : 'Manager review',
+      })
+      appendAudit(st, me.id, 'Incident reported', r.id, `${typeLabel(inc.type)}, ${h.label.toLowerCase()}. ${inc.what}${fall?.neuroObs ? ' Neuro observations scheduled for 24 hours.' : ''}`)
+      return { ok: true, data: { id: inc.id }, message: fall ? (fall.neuroObs ? 'Neuro observations are scheduled for the next 24 hours.' : 'Post-fall observations are scheduled.') : undefined }
+    },
+  },
+
+  'incident.tell': {
+    roles: ['RN', 'EN', 'NM'],
+    run: (st, me, b) => {
+      const i = st.snap.incidents.find((x) => x.id === b.id)
+      if (!i) return fail('invalid', 'Incident not found.')
+      if (i.status === 'closed') return fail('invalid', 'Closed incidents can no longer be changed.')
+      if (b.party !== 'family' && b.party !== 'doctor') return fail('invalid', 'Choose who was told.')
+      if (!b.who?.trim()) return fail('invalid', 'Enter the name of the person told.')
+      i.told[b.party as 'family' | 'doctor'] = { t: st.snap.now, by: me.id, who: b.who.trim(), how: b.how || 'Phone call' }
+      appendAudit(st, me.id, b.party === 'family' ? 'Family told of incident' : 'Doctor told of incident', i.rid, `${typeLabel(i.type)}: ${b.who.trim()}, ${(b.how || 'phone call').toLowerCase()}.`)
+      return { ok: true }
+    },
+  },
+
+  'incident.review': {
+    roles: ['NM'],
+    run: (st, me, b) => {
+      const i = st.snap.incidents.find((x) => x.id === b.id)
+      if (!i) return fail('invalid', 'Incident not found.')
+      if (i.status === 'closed') return fail('invalid', 'Closed incidents can no longer be changed.')
+      if (!b.findings?.trim()) return fail('invalid', 'Write what the review found.')
+      i.review = { t: st.snap.now, by: me.id, factors: b.factors ?? [], findings: b.findings.trim(), actions: (b.actions ?? '').trim() }
+      i.status = 'review'
+      appendAudit(st, me.id, i.type === 'fall' ? 'Post-fall analysis recorded' : 'Incident reviewed', i.rid, `${i.review.factors.length ? `Factors: ${i.review.factors.join(', ')}. ` : ''}${i.review.findings}`)
+      return { ok: true }
+    },
+  },
+
+  'incident.close': {
+    roles: ['NM'],
+    run: (st, me, b) => {
+      const s = st.snap
+      const i = s.incidents.find((x) => x.id === b.id)
+      if (!i) return fail('invalid', 'Incident not found.')
+      if (i.status === 'closed') return fail('invalid', 'Already closed.')
+      const blockers = closeBlockers(s, i)
+      if (blockers.length) return fail('blocked', 'Not ready to close', blockers.join('. ') + '.')
+      if (!b.summary?.trim()) return fail('invalid', 'Write a short closing summary.')
+      i.closed = { t: s.now, by: me.id, summary: b.summary.trim() }
+      i.status = 'closed'
+      for (const a of s.alerts) if (a.rid === i.rid && a.kind === 'incident' && a.status !== 'resolved') { a.status = 'resolved'; a.resolvedBy = me.id; a.resolvedT = s.now }
+      appendAudit(st, me.id, 'Incident closed', i.rid, `${typeLabel(i.type)}. ${i.closed.summary}`)
       return { ok: true }
     },
   },

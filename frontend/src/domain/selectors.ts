@@ -60,7 +60,7 @@ export interface NowItem {
   title: string
   detail: string
   due?: number
-  action: { label: string; to: 'round' | 'resident' | 'alerts'; tab?: string }
+  action: { label: string; to: 'round' | 'resident' | 'alerts' | 'incidents'; tab?: string }
   rank: number
 }
 
@@ -76,7 +76,11 @@ export function nowQueue(s: Snapshot): NowItem[] {
       key: a.id, rid: a.rid, tone, title: a.title, rank: a.severity === 'high' ? 0 : a.severity === 'medium' ? 2 : 4,
       detail: `${r ? `${fullName(r)} · ${r.bed} · ` : ''}${a.status === 'ack' ? 'Acknowledged' : 'Not yet acknowledged'}`,
       due: a.dueT,
-      action: a.kind === 'transcription'
+      action: a.kind === 'neuro'
+        ? { label: 'Record obs', to: 'resident', tab: 'vitals' }
+        : a.kind === 'incident'
+          ? { label: 'Open', to: 'resident' }
+          : a.kind === 'transcription'
         ? { label: 'Verify', to: 'resident', tab: 'meds' }
         : a.kind === 'news2'
           ? { label: 'Record obs', to: 'resident', tab: 'vitals' }

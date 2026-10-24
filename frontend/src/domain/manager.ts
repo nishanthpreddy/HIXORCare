@@ -1,6 +1,7 @@
 // What the nurse manager looks at: the whole ward at once, the last seven days, and what needs a manager's decision.
-import { ASSESSMENTS, band, currentSlot, dateOf, dosesInSlot, findAdmin, fullName, levelTone, residentOf, scoreTone, slotMin, when, windowMin, awaitingVerification } from './clinical'
-import { activeAlerts, latestAssessment, latestVitals, shiftNow, type Tone } from './selectors'
+import { ASSESSMENTS, band, currentSlot, dateOf, dosesInSlot, findAdmin, fullName, levelTone, residentOf, scoreTone, slotMin, until, when, windowMin, awaitingVerification } from './clinical'
+import { closeBlockers, harmOf, isSerious, typeLabel } from './incidents'
+import { activeAlerts, latestAssessment, latestVitals, roundProgress, shiftNow, type Tone } from './selectors'
 import type { Resident, Snapshot } from './types'
 
 /** Home policy: risk assessments are repeated at least monthly, and on admission within 48 hours. */
@@ -184,17 +185,26 @@ export function reviewsDue(s: Snapshot): DueItem[] {
   return out.sort((a, b) => a.dueDays - b.dueDays)
 }
 
-export interface ManagerItem { key: string; rid: string | null; tone: Tone; title: string; detail: string; to: 'resident' | 'alerts' | 'audit'; tab?: string }
+export interface ManagerItem { key: string; rid: string | null; tone: Tone; title: string; detail: string; to: 'resident' | 'alerts' | 'audit' | 'incident'; tab?: string; incident?: string }
 
 /** Decisions and sign-offs that sit with the nurse manager, most urgent first. */
 export function managerQueue(s: Snapshot): ManagerItem[] {
   const out: ManagerItem[] = []
   for (const a of activeAlerts(s)) {
     const r = a.rid ? residentOf(s, a.rid) : null
-    if (a.status === 'open' && s.now - a.t >= ACK_ESCALATE_MIN && a.severity !== 'low') {
+    if (a.status === 'open' && s.now - a.t >= ACK_ESCALATE_MIN && a.severity !== 'low' && a.kind !== 'incident') {
       const waited = s.now - a.t >= 120 ? `${Math.floor((s.now - a.t) / 60)} h` : `${Math.round(s.now - a.t)} min`
       out.push({ key: a.id, rid: a.rid, tone: a.severity === 'high' ? 'critical' : 'warning', title: a.title, detail: `${r ? `${fullName(r)} · ` : ''}not acknowledged for ${waited} (raised ${at(a.t, s)})`, to: 'alerts' })
     }
+  }
+  for (const i of s.incidents.filter((x) => x.status !== 'closed')) {
+    const r = residentOf(s, i.rid)!
+    const left = closeBlockers(s, i)
+    out.push({
+      key: i.id, rid: i.rid, incident: i.id, to: 'incident', tone: i.type === 'abuse' || isSerious(i) ? 'critical' : 'warning',
+      title: i.type === 'abuse' && i.mohDue ? `Abuse allegation: notify MOH ${until(i.mohDue, s.now)}` : `${typeLabel(i.type)} to review: ${harmOf(i.harm).label.toLowerCase()}`,
+      detail: `${fullName(r)} · ${at(i.t, s)}${left.length ? ` · ${left.length} step${left.length > 1 ? 's' : ''} before closing` : ' · ready to close'}`,
+    })
   }
   for (const r of s.residents) {
     const waiting = s.orders.filter((o) => o.rid === r.id && awaitingVerification(o))
@@ -212,6 +222,14 @@ export function managerQueue(s: Snapshot): ManagerItem[] {
   return out.sort((a, b) => rank[a.tone] - rank[b.tone])
 }
 
+export function incidentStats(s: Snapshot) {
+  const since = dayStart(s) - 29 * 1440
+  const recent = s.incidents.filter((i) => i.t >= since)
+  const falls = recent.filter((i) => i.type === 'fall')
+  const bedDays = s.residents.filter(inHome).length * 30
+  return { recent, falls, fallsInjury: falls.filter((i) => i.harm <= 3).length, per1000: bedDays ? (falls.length / bedDays) * 1000 : null, open: s.incidents.filter((i) => i.status !== 'closed').length }
+}
+
 export function cdOverview(s: Snapshot) {
   return Object.entries(s.cdStock).map(([oid, st]) => {
     const o = s.orders.find((x) => x.id === oid)!
@@ -220,3 +238,26 @@ export function cdOverview(s: Snapshot) {
   })
 }
 
+
+/** One line per ward for a nurse manager who covers more than one. */
+export function wardSummary(s: Snapshot) {
+  const occ = occupancy(s)
+  const duty = onDuty(s)
+  const meds = medSummary(s)
+  const queue = managerQueue(s)
+  const alerts = activeAlerts(s).filter((a) => a.kind !== 'hospital')
+  const onTime = meds.trend.reduce((n, d) => n + d.onTime, 0)
+  const given = onTime + meds.trend.reduce((n, d) => n + d.late, 0)
+  const unwell = occ.living
+    .map((r) => ({ r, v: latestVitals(s, r.id) }))
+    .filter(({ v }) => v && v.news2 >= 5 && s.now - v.t <= 1440)
+    .map(({ r, v }) => ({ r, score: v!.news2 }))
+  return {
+    ward: s.ward, occ, duty, slot: meds.slot, round: roundProgress(s, meds.slot), overdue: meds.overdue, onTime, given,
+    onTimePct: given ? Math.round((onTime / given) * 100) : null,
+    decisions: queue.length, urgent: queue.filter((q) => q.tone === 'critical').length,
+    highOpen: alerts.filter((a) => a.severity === 'high' && a.status === 'open').length, alerts: alerts.length,
+    openIncidents: s.incidents.filter((i) => i.status !== 'closed').length, falls30: incidentStats(s).falls.length, unwell,
+  }
+}
+export type WardSummary = ReturnType<typeof wardSummary>

@@ -20,8 +20,8 @@ from .audit import append_audit
 from .auth import check_pin
 from .db import Clock
 from .rules import (
-    ASSESSMENTS, ESCALATION, allergy_clash, can_give_meds, cd_units, check_advice, is_rn, needs_witness, news2, news2_risk, rn_only,
-    score_assessment, verify_scan, wristband,
+    ASSESSMENTS, ESCALATION, HARM, INCIDENT_TYPES, allergy_clash, can_give_meds, cd_units, check_advice, is_rn, needs_neuro, needs_witness,
+    neuro_changed, news2, news2_risk, on_blood_thinner, post_fall_tasks, rn_only, score_assessment, verify_scan, wristband,
 )
 
 
@@ -308,10 +308,24 @@ def vitals_record(ctx: Ctx, b: dict) -> None:
         dbp = int(float(b["dbp"]))
     except (KeyError, TypeError, ValueError):
         raise ActionError("invalid", "Fill in every reading.")
+    neuro = None
+    if b.get("neuro"):
+        try:
+            neuro = {"gcs": int(b["neuro"]["gcs"]), "pupils": b["neuro"]["pupils"], "limbs": b["neuro"]["limbs"]}
+        except (KeyError, TypeError, ValueError):
+            raise ActionError("invalid", "Complete the neuro check.")
+        if not 3 <= neuro["gcs"] <= 15:
+            raise ActionError("invalid", "GCS is a score from 3 to 15.")
     score, risk = news2(**v), news2_risk(**v)
     pol = ESCALATION[risk]
+    baseline = ctx.db.scalar(select(m.Vitals.neuro).where(m.Vitals.resident_id == r.id, m.Vitals.neuro.is_not(None)).order_by(m.Vitals.at))
     ctx.db.add(m.Vitals(resident_id=r.id, at=ctx.now, rr=int(v["rr"]), spo2=int(v["spo2"]), o2=v["o2"], sbp=int(v["sbp"]), dbp=dbp, pulse=int(v["pulse"]),
-                        acvpu=v["acvpu"], temp=v["temp"], news2=score, by_id=ctx.me.id, note=b.get("note") or None))
+                        acvpu=v["acvpu"], temp=v["temp"], news2=score, by_id=ctx.me.id, note=b.get("note") or None, neuro=neuro))
+    if neuro and neuro_changed(neuro, baseline):
+        was = f" (was {baseline['gcs']})" if baseline else ""
+        raise_alert(ctx, r.id, "neuro", "high", "Neuro signs changed after a fall",
+                    f"GCS {neuro['gcs']}{was}, pupils {neuro['pupils']}, limbs {neuro['limbs']}. "
+                    "Call the doctor now and consider an ambulance (995).")
     resolve_alerts(ctx, r.id, "news2")
     alert_id = None
     if pol["alert"]:
@@ -322,7 +336,8 @@ def vitals_record(ctx: Ctx, b: dict) -> None:
                         ctx.clk.now + pol["obs_every"], "Next observations")
         alert_id = a.id
     obs = ctx.db.scalar(select(m.Task).where(m.Task.resident_id == r.id, m.Task.done_at.is_(None), m.Task.category == "obs",
-                                             m.Task.due_at <= ctx.clk.dt(ctx.clk.now + 60), ~m.Task.text.ilike("%glucose%")).order_by(m.Task.due_at))
+                                             m.Task.due_at <= ctx.clk.dt(ctx.clk.now + 60), ~m.Task.text.ilike("%glucose%"),
+                                             *([] if neuro else [~m.Task.text.ilike("%neuro obs%")])).order_by(m.Task.due_at))
     if obs:
         obs.done_at, obs.done_by = ctx.now, ctx.me.id
     if pol["obs_every"] <= 60:
@@ -495,6 +510,130 @@ def handover_sign(ctx: Ctx, b: dict) -> None:
     need_pin(ctx, to.id, b.get("pin"), f"{to.short}'s")
     ctx.db.add(m.Handover(id=uid("h"), shift=b.get("shift") or "", at=ctx.now, from_id=ctx.me.id, to_id=to.id, summary=b.get("summary") or ""))
     ctx.audit("Handover signed", None, f"{b.get('shiftLabel') or 'Shift'} handover. Received by {to.name} ({to.role}).")
+
+
+# ---------- Incidents ----------
+
+def incident(ctx: Ctx, iid: str | None) -> m.Incident:
+    i = ctx.db.get(m.Incident, iid) if iid else None
+    if not i:
+        raise ActionError("invalid", "Incident not found.")
+    return i
+
+
+def close_blockers(ctx: Ctx, i: m.Incident) -> list[str]:
+    out = []
+    if i.harm <= 4 and "family" not in (i.told or {}):
+        out.append("Record that the family has been told")
+    if i.harm <= 4 and "doctor" not in (i.told or {}):
+        out.append("Record that the doctor has been told")
+    if not i.review:
+        out.append("Complete the post-fall analysis" if i.type == "fall" else "Record the review")
+    if i.type == "fall":
+        if not ctx.db.scalar(select(m.AssessmentRecord.id).where(m.AssessmentRecord.resident_id == i.resident_id, m.AssessmentRecord.type == "morse",
+                                                                 m.AssessmentRecord.at >= i.at)):
+            out.append("Reassess falls risk (Morse)")
+        left = len(ctx.db.scalars(select(m.Task.id).where(m.Task.resident_id == i.resident_id, m.Task.text.startswith("Post-fall"), m.Task.due_at >= i.at,
+                                                          m.Task.done_at.is_(None))).all())
+        if left:
+            out.append(f"Finish post-fall observations ({left} left)")
+    if i.type == "abuse":
+        out.append("Abuse allegations are closed from a safeguarding case")
+    return out
+
+
+@action("incident.report", {"RN", "EN", "CA", "NM"})
+def incident_report(ctx: Ctx, b: dict) -> None:
+    r = ctx.db.get(m.Resident, b.get("rid") or "")
+    if not r:
+        raise ActionError("invalid", "Choose the resident involved.")
+    kind = b.get("type")
+    if kind not in INCIDENT_TYPES:
+        raise ActionError("invalid", "Choose what happened.")
+    what = (b.get("what") or "").strip()
+    if not what:
+        raise ActionError("invalid", "Describe what you saw.")
+    try:
+        harm = int(b.get("harm") or 0)
+    except (TypeError, ValueError):
+        harm = 0
+    if harm not in HARM:
+        raise ActionError("invalid", "Choose the level of harm.")
+    t = min(ctx.clk.now, int(b["t"])) if b.get("t") is not None else ctx.clk.now
+    fall = None
+    if kind == "fall":
+        f = b.get("fall") or {}
+        orders = ctx.db.scalars(select(m.MedicationOrder).where(m.MedicationOrder.resident_id == r.id)).all()
+        fall = {"witnessed": bool(f.get("witnessed")), "headStrike": f.get("headStrike") or "not sure", "bloodThinner": on_blood_thinner(orders)}
+        fall["neuroObs"] = needs_neuro(fall["witnessed"], fall["headStrike"], fall["bloodThinner"])
+    told = {}
+    if b.get("familyTold"):
+        told["family"] = {"at": ctx.now.isoformat(), "by": ctx.me.id, "who": r.decision_maker.get("name", "Family"), "how": "Told when reporting"}
+    if b.get("doctorTold"):
+        told["doctor"] = {"at": ctx.now.isoformat(), "by": ctx.me.id, "who": "Visiting doctor", "how": "Told when reporting"}
+    i = m.Incident(id=uid("inc"), resident_id=r.id, type=kind, at=ctx.clk.dt(t), reported_at=ctx.now, by_id=ctx.me.id, place=b.get("where") or "", what=what,
+                   injury=b.get("injury") or "None", harm=harm, action=b.get("action") or "", fall=fall, told=told, status="open",
+                   moh_due=ctx.clk.dt(ctx.clk.now + 72 * 60) if kind == "abuse" else None)
+    ctx.db.add(i)
+    if fall:
+        for due, text_ in post_fall_tasks(t, fall["neuroObs"]):
+            if due > ctx.clk.now - 15:
+                ctx.db.add(m.Task(id=uid("t"), resident_id=r.id, text=text_, due_at=ctx.clk.dt(due), category="obs"))
+        ctx.db.add(m.Task(id=uid("t"), resident_id=r.id, text="Reassess pain after the fall", due_at=ctx.clk.dt(ctx.clk.now + 240), category="assessment", assessment="abbey"))
+        ctx.db.add(m.Task(id=uid("t"), resident_id=r.id, text="Reassess falls risk after the fall", due_at=ctx.clk.dt(ctx.clk.now + 1440), category="assessment", assessment="morse"))
+    abuse = kind == "abuse"
+    raise_alert(ctx, r.id, "incident", "high" if harm <= 2 or abuse else "medium" if harm == 3 or fall else "low", f"{INCIDENT_TYPES[kind]} reported: {r.preferred}",
+                f"{HARM[harm]}. {what}{' MOH must be notified within 72 hours by the Head of Nursing or a key appointment holder.' if abuse else ''}",
+                ctx.clk.now + 72 * 60, "MOH notification" if abuse else "Manager review")
+    ctx.audit("Incident reported", r.id, f"{INCIDENT_TYPES[kind]}, {HARM[harm].lower()}. {what}{' Neuro observations scheduled for 24 hours.' if fall and fall['neuroObs'] else ''}")
+    ctx.data = {"id": i.id}
+    if fall:
+        ctx.message = "Neuro observations are scheduled for the next 24 hours." if fall["neuroObs"] else "Post-fall observations are scheduled."
+
+
+@action("incident.tell", {"RN", "EN", "NM"})
+def incident_tell(ctx: Ctx, b: dict) -> None:
+    i = incident(ctx, b.get("id"))
+    if i.status == "closed":
+        raise ActionError("invalid", "Closed incidents can no longer be changed.")
+    party, who = b.get("party"), (b.get("who") or "").strip()
+    if party not in ("family", "doctor"):
+        raise ActionError("invalid", "Choose who was told.")
+    if not who:
+        raise ActionError("invalid", "Enter the name of the person told.")
+    how = b.get("how") or "Phone call"
+    i.told = {**(i.told or {}), party: {"at": ctx.now.isoformat(), "by": ctx.me.id, "who": who, "how": how}}
+    ctx.audit("Family told of incident" if party == "family" else "Doctor told of incident", i.resident_id, f"{INCIDENT_TYPES[i.type]}: {who}, {how.lower()}.")
+
+
+@action("incident.review", {"NM"})
+def incident_review(ctx: Ctx, b: dict) -> None:
+    i = incident(ctx, b.get("id"))
+    if i.status == "closed":
+        raise ActionError("invalid", "Closed incidents can no longer be changed.")
+    findings = (b.get("findings") or "").strip()
+    if not findings:
+        raise ActionError("invalid", "Write what the review found.")
+    factors = [str(f) for f in b.get("factors") or []]
+    i.review, i.review_by, i.review_at, i.status = {"factors": factors, "findings": findings, "actions": (b.get("actions") or "").strip()}, ctx.me.id, ctx.now, "review"
+    ctx.audit("Post-fall analysis recorded" if i.type == "fall" else "Incident reviewed", i.resident_id,
+              f"{('Factors: ' + ', '.join(factors) + '. ') if factors else ''}{findings}")
+
+
+@action("incident.close", {"NM"})
+def incident_close(ctx: Ctx, b: dict) -> None:
+    i = incident(ctx, b.get("id"))
+    if i.status == "closed":
+        raise ActionError("invalid", "Already closed.")
+    blockers = close_blockers(ctx, i)
+    if blockers:
+        raise ActionError("blocked", "Not ready to close", ". ".join(blockers) + ".")
+    summary = (b.get("summary") or "").strip()
+    if not summary:
+        raise ActionError("invalid", "Write a short closing summary.")
+    i.status, i.closed_by, i.closed_at, i.close_summary = "closed", ctx.me.id, ctx.now, summary
+    resolve_alerts(ctx, i.resident_id, "incident")
+    ctx.audit("Incident closed", i.resident_id, f"{INCIDENT_TYPES[i.type]}. {summary}")
 
 
 def run(db: Session, clk: Clock, me: m.Staff, name: str, body: dict) -> dict:

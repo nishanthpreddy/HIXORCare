@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useApp } from '../store'
 import { Icon } from '../ui/Icon'
 import { Avatar, Chip, Score } from '../ui/kit'
-import { age, clock, currentSlot, until } from '../domain/clinical'
+import { age, clock, currentSlot, until, when } from '../domain/clinical'
 import { activeAlerts, news2Chip, nextDoses, nowQueue, openTasks, riskChips, roundProgress, shiftNow } from '../domain/selectors'
 import type { Resident } from '../domain/types'
 
@@ -84,12 +84,12 @@ export function Today() {
                 </div>
                 {q.due !== undefined && (
                   <span className="when num" style={{ color: q.due < s.now ? 'var(--crit)' : 'var(--ink-2)' }}>
-                    {clock(q.due)}<br /><span className="muted" style={{ fontWeight: 600 }}>{until(q.due, s.now)}</span>
+                    {q.due - s.now > 720 ? when(q.due, s.day) : clock(q.due)}<br /><span className="muted" style={{ fontWeight: 600 }}>{until(q.due, s.now)}</span>
                   </span>
                 )}
                 <button
                   className={`btn sm ${q.tone === 'critical' ? 'primary' : ''}`}
-                  onClick={() => (q.action.to === 'resident' && q.rid ? go({ view: 'resident', rid: q.rid, tab: q.action.tab }) : go({ view: q.action.to as 'round' | 'alerts' }))}
+                  onClick={() => (q.action.to === 'resident' && q.rid ? go({ view: 'resident', rid: q.rid, tab: q.action.tab }) : go({ view: q.action.to as 'round' | 'alerts' | 'incidents' }))}
                 >
                   {q.action.label}
                 </button>

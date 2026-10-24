@@ -167,3 +167,30 @@ def verify_scan(resident, due_orders, all_orders, residents, decoys, day: str, s
     if not order.prn and slot not in order.slots:
         return ScanResult(False, "wrong-time", "Not due now", f"{order.drug} is due at {', '.join(order.slots)}.", [])
     return ScanResult(True, "match", "Pack matches", f"{order.drug} {order.dose}.", [order.id])
+
+
+# ---------- Incidents and the post-fall pathway (LC §8 falls, §21 abuse) ----------
+
+INCIDENT_TYPES = {"fall": "Fall", "medication": "Medication error", "skin": "Skin tear or injury", "behaviour": "Aggression or behaviour",
+                  "abuse": "Abuse allegation", "missing": "Missing resident", "other": "Something else"}
+HARM = {5: "Near miss", 4: "No harm", 3: "Minor harm", 2: "Moderate harm", 1: "Severe harm or death"}
+NEURO_SCHEDULE = [15, 30, 45, 60, 120, 240, 480, 720, 1440]
+OBS_SCHEDULE = [60, 240, 1440]
+
+
+def on_blood_thinner(orders) -> bool:
+    return any(not o.stopped_at and not o.prn and ({"anticoagulant", "antiplatelet"} & set(o.classes)) for o in orders)
+
+
+def needs_neuro(witnessed: bool, head_strike: str, blood_thinner: bool) -> bool:
+    """Neuro observations when the head may have been hit, nobody saw the fall, or the resident is on a blood thinner."""
+    return head_strike != "no" or not witnessed or blood_thinner
+
+
+def neuro_changed(n: dict, baseline: dict | None) -> bool:
+    return n["gcs"] <= 13 or (baseline is not None and baseline["gcs"] - n["gcs"] >= 2) or n["pupils"] != "equal and reactive" or n["limbs"] != "normal"
+
+
+def post_fall_tasks(t: int, neuro: bool) -> list[tuple[int, str]]:
+    plan = NEURO_SCHEDULE if neuro else OBS_SCHEDULE
+    return [(t + m, f"Post-fall {'neuro obs' if neuro else 'obs'} {i} of {len(plan)}") for i, m in enumerate(plan, 1)]

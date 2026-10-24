@@ -10,6 +10,8 @@ export interface Staff {
   role: Role
   title: string
   shift: string | null
+  /** Wards this person works on. A nurse manager covers one or more. */
+  wards: string[]
 }
 
 export interface Allergy {
@@ -129,6 +131,37 @@ export interface Vitals {
   by: string
   note?: string
   news2: number
+  /** Neurological check after a fall with a possible head strike or on a blood thinner. */
+  neuro?: Neuro
+}
+
+export interface Neuro { gcs: number; pupils: 'equal and reactive' | 'unequal or sluggish'; limbs: 'normal' | 'new weakness' }
+
+export type IncidentType = 'fall' | 'medication' | 'skin' | 'behaviour' | 'abuse' | 'missing' | 'other'
+/** 1 severe harm or death · 2 moderate · 3 minor · 4 no harm · 5 near miss */
+export type HarmLevel = 1 | 2 | 3 | 4 | 5
+export interface Told { t: number; by: string; who: string; how: string }
+
+export interface Incident {
+  id: string
+  rid: string
+  type: IncidentType
+  /** When it happened (may be earlier than when it was reported). */
+  t: number
+  reportedT: number
+  by: string
+  where: string
+  what: string
+  injury: string
+  harm: HarmLevel
+  action: string
+  fall?: { witnessed: boolean; headStrike: 'yes' | 'no' | 'not sure'; bloodThinner: boolean; neuroObs: boolean }
+  told: { family?: Told; doctor?: Told }
+  status: 'open' | 'review' | 'closed'
+  review?: { t: number; by: string; factors: string[]; findings: string; actions: string }
+  closed?: { t: number; by: string; summary: string }
+  /** Abuse allegations: MOH preliminary notification is due within 72 hours of management becoming aware (LC section 21). */
+  mohDue?: number
 }
 
 export interface Glucose { id: string; rid: string; t: number; value: number; by: string; note?: string }
@@ -221,11 +254,13 @@ export interface CdEntry { seq: number; orderId: string; t: number; kind: 'openi
 
 export interface DecoyPack { barcode: string; label: string; drug: string; classes: string[]; owner: string | null; note: string }
 
+export interface Ward { id: string; code: string; name: string; unit: string; beds: number }
+
 export interface Snapshot {
   day: string // ISO date, e.g. 2026-10-24
   now: number
   home: { id: string; name: string; organisation: string }
-  ward: { id: string; code: string; name: string; beds: number }
+  ward: Ward
   staff: Staff[]
   residents: Resident[]
   orders: Order[]
@@ -246,6 +281,7 @@ export interface Snapshot {
   wounds: Wound[]
   handovers: Handover[]
   sbar: SbarMessage[]
+  incidents: Incident[]
   audit: AuditEntry[]
 }
 

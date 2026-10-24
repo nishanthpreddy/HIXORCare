@@ -17,6 +17,10 @@ def _f(x):
     return float(x) if x is not None else None
 
 
+def ward_json(w: m.Ward) -> dict:
+    return {"id": w.id, "code": w.code, "name": w.name, "unit": w.unit, "beds": w.beds}
+
+
 def build(db: Session, clk: Clock, ward_id: str) -> dict:
     T = clk.mins
     ward = db.get(m.Ward, ward_id)
@@ -45,9 +49,9 @@ def build(db: Session, clk: Clock, ward_id: str) -> dict:
         "day": clk.iso_day,
         "now": clk.now,
         "home": {"id": home.id, "name": home.name, "organisation": home.organisation},
-        "ward": {"id": ward.id, "code": ward.code, "name": ward.name, "beds": ward.beds},
-        "staff": [{"id": s.id, "name": s.name, "short": s.short, "role": s.role, "title": s.title, "shift": s.shift}
-                  for s in db.scalars(select(m.Staff).where(m.Staff.home_id == home.id).order_by(m.Staff.id))],
+        "ward": ward_json(ward),
+        "staff": [{"id": s.id, "name": s.name, "short": s.short, "role": s.role, "title": s.title, "shift": s.shift, "wards": s.wards}
+                  for s in db.scalars(select(m.Staff).where(m.Staff.home_id == home.id).order_by(m.Staff.id)) if ward_id in s.wards],
         "residents": [{
             "id": r.id, "bed": r.bed, "salutation": r.salutation, "name": r.name, "preferred": r.preferred, "sex": r.sex, "dob": r.dob.isoformat(),
             "nric": r.nric_masked, "admitted": r.admitted.isoformat(), "languages": r.languages, "religion": r.religion, "diagnoses": r.diagnoses,
@@ -74,7 +78,7 @@ def build(db: Session, clk: Clock, ward_id: str) -> dict:
         } for p in db.scalars(select(m.PrnDose).where(m.PrnDose.order_id.in_(oids), m.PrnDose.at >= since))],
         "vitals": [{
             "id": str(v.id), "rid": v.resident_id, "t": T(v.at), "rr": v.rr, "spo2": v.spo2, "o2": v.o2, "sbp": v.sbp, "dbp": v.dbp, "pulse": v.pulse,
-            "acvpu": v.acvpu, "temp": _f(v.temp), "by": v.by_id, "note": v.note, "news2": v.news2,
+            "acvpu": v.acvpu, "temp": _f(v.temp), "by": v.by_id, "note": v.note, "news2": v.news2, **({"neuro": v.neuro} if v.neuro else {}),
         } for v in db.scalars(select(m.Vitals).where(m.Vitals.resident_id.in_(rids), m.Vitals.at >= since).order_by(m.Vitals.at))],
         "glucose": [{"id": str(g.id), "rid": g.resident_id, "t": T(g.at), "value": _f(g.value), "by": g.by_id, "note": g.note}
                     for g in db.scalars(select(m.Glucose).where(m.Glucose.resident_id.in_(rids), m.Glucose.at >= since))],
@@ -105,6 +109,15 @@ def build(db: Session, clk: Clock, ward_id: str) -> dict:
                       for h in db.scalars(select(m.Handover).order_by(m.Handover.at.desc()).limit(10))],
         "sbar": [{"id": x.id, "rid": x.resident_id, "t": T(x.at), "by": x.by_id, "to": x.to_id, "text": x.text}
                  for x in db.scalars(select(m.SbarMessage).where(m.SbarMessage.resident_id.in_(rids)).order_by(m.SbarMessage.at.desc()))],
+        "incidents": [{
+            "id": i.id, "rid": i.resident_id, "type": i.type, "t": T(i.at), "reportedT": T(i.reported_at), "by": i.by_id, "where": i.place, "what": i.what,
+            "injury": i.injury, "harm": i.harm, "action": i.action, **({"fall": i.fall} if i.fall else {}),
+            "told": {k: {"t": T(datetime.fromisoformat(v["at"])), "by": v["by"], "who": v["who"], "how": v["how"]} for k, v in (i.told or {}).items()},
+            "status": i.status,
+            **({"review": {**i.review, "t": T(i.review_at), "by": i.review_by}} if i.review else {}),
+            **({"closed": {"t": T(i.closed_at), "by": i.closed_by, "summary": i.close_summary}} if i.closed_at else {}),
+            **({"mohDue": T(i.moh_due)} if i.moh_due else {}),
+        } for i in db.scalars(select(m.Incident).where(m.Incident.resident_id.in_(rids)).order_by(m.Incident.at.desc()))],
         "audit": [{"seq": e.seq, "t": T(e.at), "by": e.by_id, "action": e.action, "rid": e.resident_id, "detail": e.detail, "hash": e.hash[:8]}
                   for e in db.scalars(select(m.AuditEntry).order_by(m.AuditEntry.seq.desc()).limit(AUDIT_LIMIT))],
     }

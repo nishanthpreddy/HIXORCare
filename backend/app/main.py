@@ -1,5 +1,6 @@
 """HIXOR Care ward API.
 
+GET  /api/wards                      the home's wards
 GET  /api/wards/{ward_id}/snapshot   everything the ward tablet shows
 POST /api/auth/sign-in               staff id + PIN → 10-minute token (renewed on every action)
 POST /api/actions/{name}             one server action (see app/actions.py)
@@ -14,6 +15,7 @@ from datetime import timedelta
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from . import models as m
@@ -21,7 +23,7 @@ from .actions import ActionError, run
 from .audit import verify_chain
 from .auth import check_pin, make_token, read_token
 from .db import DEMO, get_db, ward_clock
-from .snapshot import build
+from .snapshot import build, ward_json
 
 app = FastAPI(title="HIXOR Care ward API", version="0.1.0")
 
@@ -42,6 +44,11 @@ def current_staff(db: Session = Depends(get_db), authorization: str | None = Hea
 @app.get("/api/health")
 def health():
     return {"ok": True, "demo": DEMO}
+
+
+@app.get("/api/wards")
+def wards(db: Session = Depends(get_db)):
+    return [ward_json(w) for w in db.scalars(select(m.Ward).order_by(m.Ward.code))]
 
 
 @app.get("/api/wards/{ward_id}/snapshot")

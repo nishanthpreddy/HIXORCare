@@ -459,9 +459,48 @@ p { margin: 0; }
 
 .fade-in { animation: fade .25s ease-out; }
 
+.neuro-box { padding: 14px; border-radius: var(--r); background: var(--surface-2); border: 1px solid var(--line); }
+
+.two-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.choice.harm { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+.choice.harm button { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
+.told { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.told-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r); min-width: 0; }
+.told-item .grow { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.told-item > svg { color: var(--warn); flex: none; }
+.told-item.done > svg { color: var(--ok); }
+.inc-strip {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 20px; border: 0; border-top: 1px solid var(--line); text-align: left;
+  background: var(--warn-soft); color: var(--warn-ink); cursor: pointer; font-size: 14px;
+}
+.inc-strip .grow { min-width: 0; }
+.inc-figures { grid-template-columns: repeat(4, 1fr); }
+
 /* ---------- Nurse manager overview ---------- */
 .mgr-kpis { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 14px; }
 .mgr-kpis .stat-card { text-align: left; color: inherit; }
+.ward-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; }
+.ward-card { padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; text-align: left; color: inherit; min-width: 0; }
+button.ward-card { cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+button.ward-card:hover { border-color: var(--accent); }
+.ward-card.here { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset, var(--shadow); }
+.ward-card.total { background: var(--surface-2); }
+.ward-card-h { display: flex; align-items: center; gap: 12px; }
+.ward-card-h > div { display: flex; flex-direction: column; min-width: 0; }
+.ward-code { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-weight: 800; font-size: 16px; flex: none; }
+.ward-figs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.ward-figs .fig { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ward-figs .fig b { font-size: 24px; font-weight: 750; line-height: 1.1; }
+.ward-lines { display: flex; flex-direction: column; gap: 6px; color: var(--ink-2); border-top: 1px solid var(--line); padding-top: 12px; }
+.ward-lines span { display: flex; align-items: center; gap: 8px; }
+.ward-lines svg { color: var(--muted); flex: none; }
+.ward-lines .crit-ink, .ward-lines .crit-ink svg { color: var(--crit-ink); font-weight: 650; }
+.ward-detail-h { margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--line); align-items: baseline; }
+.ward-switch { flex: none; }
+.ward-switch button { min-height: 34px; padding: 6px 12px; }
+.lock-wards { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: 13px; }
+.lock-wards button { border: 1px solid rgba(255,255,255,.35); background: transparent; color: #dbe6ff; border-radius: 99px; padding: 5px 12px; font-weight: 650; font-size: 13px; cursor: pointer; }
+.lock-wards button[aria-pressed="true"] { background: #fff; color: #1e3a8a; border-color: #fff; }
 .mgr-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; align-items: start; }
 .mgr-grid.wide-left { grid-template-columns: 1.25fr 1fr; }
 .mgr-grid > * { min-width: 0; }
@@ -563,6 +602,9 @@ p { margin: 0; }
   .mgr-kpis { gap: 10px; }
   .mgr-kpis > :first-child, .mgr-kpis > :last-child { grid-column: 1 / -1; }
   .mgr-figures { grid-template-columns: 1fr 1fr; }
+  .ward-figs .fig b { font-size: 20px; }
+  .ward-card { padding: 14px; }
+  .two-fields, .told { grid-template-columns: 1fr; }
   .medchart-plot { gap: 4px; }
   .due-grid { grid-template-columns: 1fr; padding: 12px 14px 14px; }
   .stat-card { padding: 12px 14px; gap: 4px; }

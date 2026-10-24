@@ -5,6 +5,7 @@ import { Avatar, Banner, Chip, PinPad, Score, Sheet } from '../ui/kit'
 import { clock, fullName, scoreTone, when } from '../domain/clinical'
 import { activeAlerts, latestVitals, shiftNow } from '../domain/selectors'
 import type { Resident, Snapshot } from '../domain/types'
+import { harmOf, openIncidents, postFallProgress, typeLabel } from '../domain/incidents'
 
 interface Summary { r: Resident; watch: boolean; lines: { tone?: string; text: string }[]; undone: string[] }
 
@@ -18,7 +19,8 @@ function summarise(s: Snapshot, r: Resident, from: number): Summary {
   const vit = s.vitals.filter((v) => v.rid === r.id).sort((a, b) => a.t - b.t)
   const lastV = vit[vit.length - 1]
   const startV = vit.filter((v) => v.t < from).slice(-1)[0]
-  const alerts = activeAlerts(s, r.id).filter((a) => a.kind !== 'hospital')
+  const alerts = activeAlerts(s, r.id).filter((a) => a.kind !== 'hospital' && a.kind !== 'incident')
+  const incidents = openIncidents(s, r.id)
   const notes = s.notes.filter((n) => n.rid === r.id && n.t >= from)
   const undone = s.tasks.filter((t) => t.rid === r.id && !t.done && t.due < s.now && t.due >= from - 60).map((t) => t.text)
 
@@ -26,6 +28,10 @@ function summarise(s: Snapshot, r: Resident, from: number): Summary {
   if (lastV && lastV.t >= from) {
     const delta = startV ? lastV.news2 - startV.news2 : 0
     lines.push({ tone: lastV.news2 >= 5 ? 'critical' : lastV.news2 >= 3 ? 'warning' : undefined, text: `NEWS2 ${lastV.news2} at ${clock(lastV.t)}${startV ? ` (${delta > 0 ? `up ${delta}` : delta < 0 ? `down ${-delta}` : 'no change'} since start of shift)` : ''}. Temp ${lastV.temp}, pulse ${lastV.pulse}, RR ${lastV.rr}, SpO₂ ${lastV.spo2}%.` })
+  }
+  for (const i of incidents) {
+    const pf = i.type === 'fall' ? postFallProgress(s, i) : null
+    lines.push({ tone: 'warning', text: `${typeLabel(i.type)} ${when(i.t, s.day).replace(/^Yesterday/, 'yesterday')}, ${harmOf(i.harm).label.toLowerCase()}.${pf && pf.total ? ` Post-fall ${i.fall?.neuroObs ? 'neuro ' : ''}obs ${pf.done} of ${pf.total}${pf.next ? `, next ${clock(pf.next.due)}` : ''}.` : ''}${i.told.family ? '' : ' Family not yet told.'}` })
   }
   for (const a of alerts) lines.push({ tone: a.severity === 'high' ? 'critical' : 'warning', text: `${a.title}.${a.dueT ? ` ${a.dueLabel ?? 'Due'} ${clock(a.dueT)}.` : ''}` })
   if (given.length) lines.push({ text: `${given.length} dose${given.length > 1 ? 's' : ''} given this shift.` })
@@ -38,7 +44,7 @@ function summarise(s: Snapshot, r: Resident, from: number): Summary {
     lines.push({ text: `PRN ${o?.drug.split(' (')[0]} at ${clock(p.t)} for ${p.reason.toLowerCase()}.${p.effect ? ` Effect: ${p.effect.result}.` : ' Effect not yet checked.'}` })
   }
   for (const n of notes) lines.push({ text: `${n.kind}: ${n.text}` })
-  const watch = alerts.some((a) => a.severity !== 'low') || (lastV?.news2 ?? 0) >= 3 || notGiven.length > 0 || r.flags.includes('new')
+  const watch = incidents.length > 0 || alerts.some((a) => a.severity !== 'low') || (lastV?.news2 ?? 0) >= 3 || notGiven.length > 0 || r.flags.includes('new')
   return { r, watch, lines, undone }
 }
 

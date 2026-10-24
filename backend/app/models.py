@@ -34,6 +34,7 @@ class Ward(Base):
     home_id: Mapped[str] = mapped_column(ForeignKey("homes.id"))
     code: Mapped[str] = mapped_column(String(10))
     name: Mapped[str] = mapped_column(String(100))
+    unit: Mapped[str] = mapped_column(String(60), default="")  # e.g. General nursing, Dementia care
     beds: Mapped[int] = mapped_column(Integer)
 
 
@@ -46,6 +47,7 @@ class Staff(Base):
     role: Mapped[str] = mapped_column(String(4))  # RN EN CA NM DR PH
     title: Mapped[str] = mapped_column(String(120))
     shift: Mapped[str | None] = mapped_column(String(10))
+    wards: Mapped[list] = mapped_column(Json, default=list)  # wards this person works on; a nurse manager covers one or more
     pin_hash: Mapped[str] = mapped_column(String(200))
 
 
@@ -204,6 +206,33 @@ class Vitals(Base):
     news2: Mapped[int] = mapped_column(Integer)
     by_id: Mapped[str] = mapped_column(ForeignKey("staff.id"))
     note: Mapped[str | None] = mapped_column(Text)
+    neuro: Mapped[dict | None] = mapped_column(Json)  # {gcs, pupils, limbs} after a fall
+
+
+class Incident(Base):
+    """Falls, medication errors, injuries, behaviour, abuse allegations. Reported by any care staff, reviewed and closed by a nurse manager."""
+    __tablename__ = "incidents"
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    resident_id: Mapped[str] = mapped_column(ForeignKey("residents.id"), index=True)
+    type: Mapped[str] = mapped_column(String(20))
+    at: Mapped[datetime] = mapped_column(TS, index=True)
+    reported_at: Mapped[datetime] = mapped_column(TS)
+    by_id: Mapped[str] = mapped_column(ForeignKey("staff.id"))
+    place: Mapped[str] = mapped_column(Text, default="")
+    what: Mapped[str] = mapped_column(Text)
+    injury: Mapped[str] = mapped_column(Text)
+    harm: Mapped[int] = mapped_column(Integer)
+    action: Mapped[str] = mapped_column(Text, default="")
+    fall: Mapped[dict | None] = mapped_column(Json)
+    told: Mapped[dict] = mapped_column(Json, default=dict)  # {"family": {"at", "by", "who", "how"}, "doctor": {...}}
+    status: Mapped[str] = mapped_column(String(10), default="open")
+    review: Mapped[dict | None] = mapped_column(Json)  # {"factors", "findings", "actions"}
+    review_by: Mapped[str | None] = mapped_column(ForeignKey("staff.id"))
+    review_at: Mapped[datetime | None] = mapped_column(TS)
+    closed_by: Mapped[str | None] = mapped_column(ForeignKey("staff.id"))
+    closed_at: Mapped[datetime | None] = mapped_column(TS)
+    close_summary: Mapped[str | None] = mapped_column(Text)
+    moh_due: Mapped[datetime | None] = mapped_column(TS)
 
 
 class Glucose(Base):

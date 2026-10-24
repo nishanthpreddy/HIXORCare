@@ -44,6 +44,9 @@ const P: Record<string, string> = {
   filter: 'M4 5h16l-6 8v6l-4-2v-4z',
   more: 'M5 12h.01M12 12h.01M19 12h.01',
   chart: 'M4 20h16M7 16v-5M12 16V6M17 16v-8',
+  flag: 'M5 21V4M5 4h11l-2 4 2 4H5',
+  home: 'M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-6h4v6',
+  swap: 'M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7',
 }
 
 export function Icon({ name, size, className, title }: { name: keyof typeof P | string; size?: number; className?: string; title?: string }) {

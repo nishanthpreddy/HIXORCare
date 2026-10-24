@@ -14,6 +14,7 @@ import { HandoverView } from './views/Handover'
 import { Alerts } from './views/Alerts'
 import { Audit } from './views/Audit'
 import { Manager } from './views/Manager'
+import { Incidents } from './views/Incidents'
 
 export default function App() {
   return (
@@ -47,6 +48,7 @@ const NAV: { view: View; label: string; icon: string; hideSm?: boolean; roles?: 
   { view: 'residents', label: 'Residents', icon: 'residents' },
   { view: 'handover', label: 'Handover', icon: 'handover' },
   { view: 'alerts', label: 'Alerts', icon: 'bell' },
+  { view: 'incidents', label: 'Incidents', icon: 'flag', hideSm: true },
   { view: 'audit', label: 'Audit', icon: 'shield', hideSm: true },
 ]
 
@@ -85,6 +87,7 @@ function Shell() {
         ) : (
           <main className="content">
             {route.view === 'manager' && <Manager />}
+            {route.view === 'incidents' && <Incidents />}
             {route.view === 'today' && <Today />}
             {route.view === 'residents' && <Residents />}
             {route.view === 'resident' && <ResidentView key={route.rid} />}
@@ -112,12 +115,14 @@ function RailFoot() {
 }
 
 const TITLES: Record<View, string> = {
-  manager: 'Ward overview', today: 'Today', round: 'Medication round', residents: 'Residents', resident: 'Resident', handover: 'Shift handover', alerts: 'Alerts', audit: 'Audit trail',
+  manager: 'Overview', incidents: 'Incidents', today: 'Today', round: 'Medication round', residents: 'Residents', resident: 'Resident', handover: 'Shift handover', alerts: 'Alerts', audit: 'Audit trail',
 }
 
 function TopBar() {
-  const { s, route, me, lock, go } = useApp()
+  const { s, route: asked, me, lock, go, wards, setWard } = useApp()
+  const route = asked.view === 'manager' && me?.role !== 'NM' ? { ...asked, view: 'today' as View } : asked
   const [menu, setMenu] = useState(false)
+  const mine = me?.role === 'NM' ? wards.filter((w) => me.wards.includes(w.id)) : []
   const shift = shiftNow(s.now)
   const date = dateOf(s.day).toLocaleDateString('en-SG', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })
   const r = route.view === 'resident' && route.rid ? residentOf(s, route.rid) : null
@@ -128,8 +133,13 @@ function TopBar() {
       ) : null}
       <div className="where grow">
         <h1>{r ? `${r.salutation} ${r.name}` : TITLES[route.view]}</h1>
-        <span className="muted">{s.ward.name} · {s.home.name}</span>
+        <span className="muted">{s.ward.name} · {s.ward.unit}<span className="hide-sm"> · {s.home.name}</span></span>
       </div>
+      {mine.length > 1 && (
+        <div className="seg ward-switch hide-sm" role="group" aria-label="Ward">
+          {mine.map((w) => <button key={w.id} aria-pressed={w.id === s.ward.id} onClick={() => setWard(w.id)} title={`${w.name}, ${w.unit}`}>{w.code}</button>)}
+        </div>
+      )}
       <div style={{ position: 'relative' }}>
         <button className="clock-chip num" onClick={() => setMenu((m) => !m)} aria-expanded={menu} title="Demo clock">
           <Icon name="clock" size={16} />
@@ -176,7 +186,7 @@ function DemoMenu({ onClose }: { onClose: () => void }) {
 }
 
 function Lock() {
-  const { s, signIn, go } = useApp()
+  const { s, signIn, go, wards, setWard } = useApp()
   const [who, setWho] = useState<Staff | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const shift = shiftNow(s.now)
@@ -200,7 +210,15 @@ function Lock() {
           <div className="big-time">{clock(s.now)}</div>
           <div style={{ marginTop: 8 }}>{date} · {shift.label}</div>
         </div>
-        <h1>{s.ward.name}<br />ward tablet</h1>
+        <div className="stack" style={{ gap: 10 }}>
+          <h1>{s.ward.name}<br />ward tablet</h1>
+          {wards.length > 1 && (
+            <div className="lock-wards" role="group" aria-label="Ward on this tablet">
+              <span>{s.ward.unit} ·</span>
+              {wards.map((w) => <button key={w.id} aria-pressed={w.id === s.ward.id} onClick={() => { setWho(null); setWard(w.id) }}>{w.name}</button>)}
+            </div>
+          )}
+        </div>
         <div className="stack" style={{ gap: 10 }}>
           <div className="stat"><Icon name="pill" size={20} /><span><b>{prog.done} of {prog.total}</b> doses done in the {slot} round</span></div>
           <div className="stat"><Icon name="bell" size={20} /><span><b>{open}</b> alert{open === 1 ? '' : 's'} waiting</span></div>

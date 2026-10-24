@@ -7,7 +7,9 @@ import {
   riskTone, scoreTone, until, when, type VitalsInput,
 } from '../domain/clinical'
 import { activeAlerts, latestAssessment, latestVitals, openTasks, riskChips, vitalsOf } from '../domain/selectors'
-import type { Resident, Snapshot, Vitals } from '../domain/types'
+import type { Neuro, Resident, Snapshot, Vitals } from '../domain/types'
+import { harmOf, neuroChanged, openIncidents, postFallProgress, typeLabel } from '../domain/incidents'
+import { IncidentSheet, ReportIncidentSheet } from './Incidents'
 
 const TABS = [
   { id: 'overview', label: 'Overview' },
@@ -54,6 +56,8 @@ export function ResidentView() {
 
 function ResHead({ r, onTab }: { r: Resident; onTab: (t: string) => void }) {
   const { s, go } = useApp()
+  const [reporting, setReporting] = useState(false)
+  const [incId, setIncId] = useState<string | null>(null)
   const v = latestVitals(s, r.id)
   return (
     <section className="card" style={{ overflow: 'hidden' }}>
@@ -72,10 +76,23 @@ function ResHead({ r, onTab }: { r: Resident; onTab: (t: string) => void }) {
         </div>
         <div className="row wrap" style={{ justifyContent: 'flex-end' }}>
           {v && <div style={{ textAlign: 'center', marginRight: 8 }}><Score value={v.news2} tone={scoreTone(v.news2)} label={`NEWS2 ${v.news2}`} /><div className="tiny muted">NEWS2 {clock(v.t)}</div></div>}
+          {r.status === 'in' && <button className="btn" onClick={() => setReporting(true)}><Icon name="flag" />Report incident</button>}
           <button className="btn" onClick={() => onTab('vitals')}><Icon name="heart" />Record obs</button>
           {r.status === 'in' && <button className="btn primary" onClick={() => go({ view: 'round', rid: r.id })}><Icon name="pill" />Give medicines</button>}
         </div>
       </div>
+      {openIncidents(s, r.id).map((i) => {
+        const pf = i.type === 'fall' ? postFallProgress(s, i) : null
+        return (
+          <button key={i.id} className="inc-strip" onClick={() => setIncId(i.id)}>
+            <Icon name="flag" size={18} />
+            <span className="grow"><b>{typeLabel(i.type)} {when(i.t, s.day).replace(/^Yesterday/, 'yesterday')}</b> · {harmOf(i.harm).label.toLowerCase()}{pf && pf.next ? ` · next post-fall check ${clock(pf.next.due)}` : ''}{!i.told.family ? ' · family not yet told' : ''}</span>
+            <span className="small">Open</span>
+          </button>
+        )
+      })}
+      {reporting && <ReportIncidentSheet rid={r.id} onClose={() => setReporting(false)} onReported={(id) => { setReporting(false); setIncId(id) }} />}
+      {incId && <IncidentSheet id={incId} onClose={() => setIncId(null)} />}
       {r.stay && (() => {
         const from = new Date(r.stay.from).getTime(), to = new Date(r.stay.to).getTime(), today = new Date(s.day).getTime()
         const total = Math.round((to - from) / 864e5) + 1, day = Math.round((today - from) / 864e5) + 1
@@ -242,6 +259,9 @@ function VitalsTab({ r }: { r: Resident }) {
   const empty = { temp: '', pulse: '', rr: '', spo2: '', sbp: '', dbp: '', acvpu: 'A', o2: false, note: '' }
   const [f, setF] = useState(empty)
   const [sbarFor, setSbarFor] = useState<Vitals | null>(null)
+  const neuroTask = openTasks(s, r.id).find((t) => t.text.includes('neuro obs'))
+  const [withNeuro, setWithNeuro] = useState(!!neuroTask)
+  const [neuro, setNeuro] = useState<Neuro>({ gcs: 15, pupils: 'equal and reactive', limbs: 'normal' })
   const filled = ['temp', 'pulse', 'rr', 'spo2', 'sbp', 'dbp'].every((k) => (f as any)[k] !== '')
   const input: VitalsInput | null = filled ? { temp: +f.temp, pulse: +f.pulse, rr: +f.rr, spo2: +f.spo2, sbp: +f.sbp, acvpu: f.acvpu as any, o2: f.o2 } : null
   const live = input ? news2Parts(input) : null
@@ -261,7 +281,7 @@ function VitalsTab({ r }: { r: Resident }) {
     </div>
   )
   const submit = async () => {
-    const res = await act<{ score: number; risk: string; alertId?: string }>('vitals.record', { rid: r.id, ...f }, { success: 'Observations saved.' })
+    const res = await act<{ score: number; risk: string; alertId?: string }>('vitals.record', { rid: r.id, ...f, neuro: withNeuro ? neuro : undefined }, { success: withNeuro ? 'Observations and neuro check saved.' : 'Observations saved.' })
     if (res.ok) {
       setF(empty)
       if (res.data && (res.data.risk === 'medium' || res.data.risk === 'high')) {
@@ -292,6 +312,34 @@ function VitalsTab({ r }: { r: Resident }) {
             <span className="label">Breathing</span>
             <Choice label="Air or oxygen" value={f.o2 ? 'o2' : 'air'} onChange={(v) => setF((x) => ({ ...x, o2: v === 'o2' }))} options={[{ value: 'air', label: 'Room air' }, { value: 'o2', label: 'On oxygen' }]} />
           </div>
+          {neuroTask && <Banner tone="warning" icon="walk" title={`${neuroTask.text}, due ${clock(neuroTask.due)}`}>After a fall: record the neuro check with these observations.</Banner>}
+          <label className="row" style={{ gap: 10, cursor: 'pointer' }}>
+            <input type="checkbox" checked={withNeuro} onChange={(e) => setWithNeuro(e.target.checked)} style={{ width: 20, height: 20 }} />
+            <span className="small"><b>Add a neuro check</b> (Glasgow Coma Scale, pupils, limbs)</span>
+          </label>
+          {withNeuro && (
+            <div className="neuro-box stack" style={{ gap: 12 }}>
+              <div className="field">
+                <label htmlFor="v-gcs">Glasgow Coma Scale</label>
+                <div className="row" style={{ gap: 10 }}>
+                  <button className="btn" aria-label="Lower GCS" onClick={() => setNeuro((n) => ({ ...n, gcs: Math.max(3, n.gcs - 1) }))}>−</button>
+                  <input id="v-gcs" className="input big" style={{ width: 90, textAlign: 'center' }} inputMode="numeric" value={neuro.gcs}
+                    onChange={(e) => setNeuro((n) => ({ ...n, gcs: Math.min(15, Math.max(3, Number(e.target.value.replace(/\D/g, '')) || 3)) }))} />
+                  <button className="btn" aria-label="Raise GCS" onClick={() => setNeuro((n) => ({ ...n, gcs: Math.min(15, n.gcs + 1) }))}>+</button>
+                  <span className="small muted">out of 15</span>
+                </div>
+              </div>
+              <div className="field">
+                <span className="label">Pupils</span>
+                <Choice label="Pupils" value={neuro.pupils} onChange={(v) => setNeuro((n) => ({ ...n, pupils: v }))} options={[{ value: 'equal and reactive', label: 'Equal and reactive' }, { value: 'unequal or sluggish', label: 'Unequal or sluggish' }]} />
+              </div>
+              <div className="field">
+                <span className="label">Arms and legs</span>
+                <Choice label="Limbs" value={neuro.limbs} onChange={(v) => setNeuro((n) => ({ ...n, limbs: v }))} options={[{ value: 'normal', label: 'Moving normally' }, { value: 'new weakness', label: 'New weakness' }]} />
+              </div>
+              {neuroChanged(neuro, vitalsOf(s, r.id).find((x) => x.neuro)?.neuro) && <Banner tone="critical" title="Neuro signs have changed">Call the doctor now. Consider an ambulance (995) if GCS keeps falling. Saving raises an alert to the nurse in charge.</Banner>}
+            </div>
+          )}
           <div className="field">
             <label htmlFor="v-note">Note (optional)</label>
             <input id="v-note" className="input" value={f.note} onChange={(e) => setF((x) => ({ ...x, note: e.target.value }))} placeholder="For example: productive cough" />
@@ -316,13 +364,14 @@ function VitalsTab({ r }: { r: Resident }) {
           <div className="card-h"><h3>History</h3></div>
           <div className="mar-wrap" style={{ marginTop: 8 }}>
             <table className="mar" style={{ minWidth: 520 }}>
-              <thead><tr><th>When</th><th>NEWS2</th><th>T</th><th>P</th><th>RR</th><th>SpO₂</th><th>BP</th><th>By</th></tr></thead>
+              <thead><tr><th>When</th><th>NEWS2</th><th>T</th><th>P</th><th>RR</th><th>SpO₂</th><th>BP</th><th>GCS</th><th>By</th></tr></thead>
               <tbody className="num">
                 {history.map((v) => (
                   <tr key={v.id}>
                     <td>{when(v.t, s.day)}</td>
                     <td><Score value={v.news2} tone={scoreTone(v.news2)} /></td>
                     <td>{v.temp.toFixed(1)}</td><td>{v.pulse}</td><td>{v.rr}</td><td>{v.spo2}</td><td>{v.sbp}/{v.dbp}</td>
+                    <td title={v.neuro ? `Pupils ${v.neuro.pupils}, limbs ${v.neuro.limbs}` : undefined} style={v.neuro && v.neuro.gcs < 15 ? { color: 'var(--crit)', fontWeight: 700 } : undefined}>{v.neuro?.gcs ?? '–'}</td>
                     <td className="small">{staff(v.by)?.short}</td>
                   </tr>
                 ))}

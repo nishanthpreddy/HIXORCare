@@ -2,22 +2,28 @@
   "_about": "Demo data for Ward 2B, Harmony Eldercare. All people are fictional. Times are minutes from 00:00 today (Asia/Singapore); negative values are earlier days. The demo clock starts at clockStart.",
   "clockStart": 492,
   "home": { "id": "h-harmony-1", "name": "Harmony Nursing Home (Bukit Panjang)", "organisation": "Harmony Eldercare" },
-  "ward": { "id": "w-2b", "code": "2B", "name": "Ward 2B", "beds": 12 },
+  "ward": { "id": "w-2b", "code": "2B", "name": "Ward 2B", "unit": "General nursing", "beds": 12 },
   "shifts": [
     { "id": "night", "label": "Night", "start": "23:00", "end": "07:00" },
     { "id": "am", "label": "AM", "start": "07:00", "end": "15:00" },
     { "id": "pm", "label": "PM", "start": "15:00", "end": "23:00" }
   ],
   "staff": [
-    { "id": "s-aisyah", "name": "Aisyah Rahman", "short": "Aisyah", "role": "RN", "title": "Registered nurse · Nurse in charge", "shift": "am" },
-    { "id": "s-ramesh", "name": "Ramesh Kumar", "short": "Ramesh", "role": "EN", "title": "Enrolled nurse", "shift": "am" },
-    { "id": "s-maricel", "name": "Maricel Santos", "short": "Maricel", "role": "CA", "title": "Care aide", "shift": "am" },
-    { "id": "s-mary", "name": "Mary Lim", "short": "Mary", "role": "NM", "title": "Nurse manager", "shift": "am" },
-    { "id": "s-grace", "name": "Grace Tan", "short": "Grace", "role": "RN", "title": "Registered nurse", "shift": "pm" },
-    { "id": "s-hidayah", "name": "Nur Hidayah", "short": "Hidayah", "role": "RN", "title": "Registered nurse", "shift": "night" },
-    { "id": "s-faiz", "name": "Faiz Rahim", "short": "Faiz", "role": "EN", "title": "Enrolled nurse", "shift": "night" },
-    { "id": "s-drlim", "name": "Dr Lim Wei Ming", "short": "Dr Lim", "role": "DR", "title": "Visiting doctor", "shift": null },
-    { "id": "s-kevin", "name": "Kevin Tan", "short": "Kevin", "role": "PH", "title": "Pharmacist", "shift": null }
+    { "id": "s-aisyah", "name": "Aisyah Rahman", "short": "Aisyah", "role": "RN", "title": "Registered nurse · Nurse in charge", "shift": "am", "wards": ["w-2b"] },
+    { "id": "s-ramesh", "name": "Ramesh Kumar", "short": "Ramesh", "role": "EN", "title": "Enrolled nurse", "shift": "am", "wards": ["w-2b"] },
+    { "id": "s-maricel", "name": "Maricel Santos", "short": "Maricel", "role": "CA", "title": "Care aide", "shift": "am", "wards": ["w-2b"] },
+    { "id": "s-mary", "name": "Mary Lim", "short": "Mary", "role": "NM", "title": "Nurse manager", "shift": "am", "wards": ["w-2b", "w-3a"] },
+    { "id": "s-grace", "name": "Grace Tan", "short": "Grace", "role": "RN", "title": "Registered nurse", "shift": "pm", "wards": ["w-2b"] },
+    { "id": "s-hidayah", "name": "Nur Hidayah", "short": "Hidayah", "role": "RN", "title": "Registered nurse", "shift": "night", "wards": ["w-2b"] },
+    { "id": "s-faiz", "name": "Faiz Rahim", "short": "Faiz", "role": "EN", "title": "Enrolled nurse", "shift": "night", "wards": ["w-2b"] },
+    { "id": "s-drlim", "name": "Dr Lim Wei Ming", "short": "Dr Lim", "role": "DR", "title": "Visiting doctor", "shift": null, "wards": ["w-2b", "w-3a"] },
+    { "id": "s-priya", "name": "Priya Nair", "short": "Priya", "role": "RN", "title": "Registered nurse · Nurse in charge", "shift": "am", "wards": ["w-3a"] },
+    { "id": "s-joseph", "name": "Joseph Tan", "short": "Joseph", "role": "EN", "title": "Enrolled nurse", "shift": "am", "wards": ["w-3a"] },
+    { "id": "s-wati", "name": "Wati Susanti", "short": "Wati", "role": "CA", "title": "Care aide", "shift": "am", "wards": ["w-3a"] },
+    { "id": "s-liza", "name": "Liza Reyes", "short": "Liza", "role": "CA", "title": "Care aide", "shift": "am", "wards": ["w-3a"] },
+    { "id": "s-daniel", "name": "Daniel Koh", "short": "Daniel", "role": "RN", "title": "Registered nurse", "shift": "pm", "wards": ["w-3a"] },
+    { "id": "s-arun", "name": "Arun Kumar", "short": "Arun", "role": "EN", "title": "Enrolled nurse", "shift": "night", "wards": ["w-3a"] },
+    { "id": "s-kevin", "name": "Kevin Tan", "short": "Kevin", "role": "PH", "title": "Pharmacist", "shift": null, "wards": ["w-2b", "w-3a"] }
   ],
   "residents": [
     {
@@ -417,6 +423,12 @@
     { "id": "p-2", "orderId": "o-wong-morprn", "t": 330, "by": "s-hidayah", "witness": "s-faiz", "reason": "Pain on repositioning", "pain": 7, "effect": { "t": 395, "by": "s-hidayah", "text": "Abbey pain score 4, more settled.", "result": "partial" } }
   ],
   "vitals": [
+    { "rid": "r-chua", "t": 205, "rr": 18, "spo2": 96, "o2": false, "sbp": 134, "dbp": 78, "pulse": 88, "acvpu": "A", "temp": 36.5, "by": "s-hidayah", "note": "After the fall. Alert, oriented to place.", "neuro": { "gcs": 15, "pupils": "equal and reactive", "limbs": "normal" } },
+    { "rid": "r-chua", "t": 221, "rr": 16, "spo2": 97, "o2": false, "sbp": 130, "dbp": 76, "pulse": 82, "acvpu": "A", "temp": 36.5, "by": "s-faiz", "neuro": { "gcs": 15, "pupils": "equal and reactive", "limbs": "normal" } },
+    { "rid": "r-chua", "t": 236, "rr": 16, "spo2": 97, "o2": false, "sbp": 128, "dbp": 76, "pulse": 80, "acvpu": "A", "temp": 36.6, "by": "s-faiz", "neuro": { "gcs": 15, "pupils": "equal and reactive", "limbs": "normal" } },
+    { "rid": "r-chua", "t": 252, "rr": 16, "spo2": 97, "o2": false, "sbp": 126, "dbp": 74, "pulse": 78, "acvpu": "A", "temp": 36.6, "by": "s-hidayah", "neuro": { "gcs": 15, "pupils": "equal and reactive", "limbs": "normal" } },
+    { "rid": "r-chua", "t": 312, "rr": 16, "spo2": 97, "o2": false, "sbp": 128, "dbp": 74, "pulse": 76, "acvpu": "A", "temp": 36.6, "by": "s-faiz", "note": "Sleeping, woke easily.", "neuro": { "gcs": 15, "pupils": "equal and reactive", "limbs": "normal" } },
+    { "rid": "r-chua", "t": 436, "rr": 16, "spo2": 97, "o2": false, "sbp": 130, "dbp": 76, "pulse": 78, "acvpu": "A", "temp": 36.7, "by": "s-hidayah", "neuro": { "gcs": 15, "pupils": "equal and reactive", "limbs": "normal" } },
     { "rid": "r-lim", "t": 330, "rr": 16, "spo2": 97, "o2": false, "sbp": 142, "dbp": 84, "pulse": 76, "acvpu": "A", "temp": 36.6, "by": "s-faiz" },
     { "rid": "r-lim", "t": -1440, "rr": 16, "spo2": 98, "o2": false, "sbp": 138, "dbp": 80, "pulse": 74, "acvpu": "A", "temp": 36.7, "by": "s-faiz" },
     { "rid": "r-muthu", "t": 340, "rr": 18, "spo2": 96, "o2": false, "sbp": 118, "dbp": 70, "pulse": 68, "acvpu": "A", "temp": 36.5, "by": "s-faiz" },
@@ -444,6 +456,7 @@
     { "rid": "r-kaur", "t": 455, "value": 6.9, "by": "s-ramesh", "note": "Before breakfast" }
   ],
   "alerts": [
+    { "id": "a-7", "rid": "r-chua", "kind": "incident", "severity": "medium", "title": "Fall reported: Bee Leng", "detail": "Minor harm. Found sitting on the bathroom floor at 03:10, not witnessed. Small skin tear on the left forearm.", "t": 205, "status": "open", "dueT": 4525, "dueLabel": "Manager review" },
     { "id": "a-1", "rid": "r-goh", "kind": "news2", "severity": "high", "title": "NEWS2 5: urgent review", "detail": "Temp 38.2 °C, RR 23, SpO₂ 94%, pulse 96. Home policy: nurse in charge now, observations every hour, inform doctor.", "t": 460, "status": "ack", "ackBy": "s-aisyah", "ackT": 464, "dueT": 520, "dueLabel": "Next observations" },
     { "id": "a-2", "rid": "r-ho", "kind": "refused", "severity": "low", "title": "Quetiapine refused last night", "detail": "22:00 dose refused. Calm overnight. Mention at doctor's round.", "t": -112, "status": "open" },
     { "id": "a-3", "rid": "r-wong", "kind": "skin", "severity": "medium", "title": "Sacral wound dressing due today", "detail": "Hydrocolloid change due. Last measured 1.8 × 1.2 cm on 21 Oct.", "t": 300, "status": "open" },
@@ -452,6 +465,17 @@
     { "id": "a-5", "rid": "r-ong", "kind": "hospital", "severity": "low", "title": "In hospital: Changi General", "detail": "Ward 46, bed 12. Medicines reconciliation needed when he returns.", "t": -2600, "status": "ack", "ackBy": "s-aisyah", "ackT": -2590 }
   ],
   "tasks": [
+    { "id": "t-pf1", "rid": "r-chua", "text": "Post-fall neuro obs 1 of 9", "due": 205, "category": "obs", "done": { "t": 221, "by": "s-faiz" } },
+    { "id": "t-pf2", "rid": "r-chua", "text": "Post-fall neuro obs 2 of 9", "due": 220, "category": "obs", "done": { "t": 236, "by": "s-faiz" } },
+    { "id": "t-pf3", "rid": "r-chua", "text": "Post-fall neuro obs 3 of 9", "due": 235, "category": "obs", "done": { "t": 252, "by": "s-hidayah" } },
+    { "id": "t-pf4", "rid": "r-chua", "text": "Post-fall neuro obs 4 of 9", "due": 250, "category": "obs", "done": { "t": 252, "by": "s-hidayah" } },
+    { "id": "t-pf5", "rid": "r-chua", "text": "Post-fall neuro obs 5 of 9", "due": 310, "category": "obs", "done": { "t": 312, "by": "s-faiz" } },
+    { "id": "t-pf6", "rid": "r-chua", "text": "Post-fall neuro obs 6 of 9", "due": 430, "category": "obs", "done": { "t": 436, "by": "s-hidayah" } },
+    { "id": "t-pf7", "rid": "r-chua", "text": "Post-fall neuro obs 7 of 9", "due": 670, "category": "obs" },
+    { "id": "t-pf8", "rid": "r-chua", "text": "Post-fall neuro obs 8 of 9", "due": 910, "category": "obs" },
+    { "id": "t-pf9", "rid": "r-chua", "text": "Post-fall neuro obs 9 of 9", "due": 1630, "category": "obs" },
+    { "id": "t-pf-pain", "rid": "r-chua", "text": "Reassess pain after the fall", "due": 445, "category": "assessment", "assessment": "abbey" },
+    { "id": "t-pf-morse", "rid": "r-chua", "text": "Reassess falls risk after the fall", "due": 1645, "category": "assessment", "assessment": "morse" },
     { "id": "t-1", "rid": "r-tan", "text": "Hourly safety check (bed alarm on)", "due": 480, "repeat": "hourly", "category": "safety" },
     { "id": "t-2", "rid": "r-tan", "text": "Observations (4-hourly while on antibiotics)", "due": 600, "category": "obs" },
     { "id": "t-3", "rid": "r-tan", "text": "Sit out of bed with walking frame, 1 assist", "due": 600, "category": "mobility" },
@@ -517,7 +541,7 @@
     { "id": "as-9", "rid": "r-siti", "type": "morse", "score": 45, "t": -25000, "by": "s-ramesh", "signedBy": "s-aisyah" },
     { "id": "as-10", "rid": "r-goh", "type": "morse", "score": 40, "t": -21000, "by": "s-ramesh", "signedBy": "s-aisyah" },
     { "id": "as-11", "rid": "r-chua", "type": "morse", "score": 50, "t": -28000, "by": "s-ramesh", "signedBy": "s-aisyah" },
-    { "id": "as-12", "rid": "r-ho", "type": "morse", "score": 45, "t": -26000, "by": "s-ramesh", "signedBy": "s-aisyah" },
+    { "id": "as-12", "rid": "r-ho", "type": "morse", "score": 45, "t": -11460, "by": "s-ramesh", "signedBy": "s-aisyah" },
     { "id": "as-13", "rid": "r-lim", "type": "morse", "score": 25, "t": -27000, "by": "s-ramesh", "signedBy": "s-aisyah" },
     { "id": "as-14", "rid": "r-kaur", "type": "morse", "score": 35, "t": -24000, "by": "s-ramesh", "signedBy": "s-aisyah" },
     { "id": "as-15", "rid": "r-maria", "type": "morse", "score": 30, "t": -23000, "by": "s-ramesh", "signedBy": "s-aisyah" }
@@ -560,13 +584,21 @@
       { "t": -700, "length": 2.0, "width": 0.8, "depth": 0, "bed": "Flap partly viable", "exudate": "Low", "by": "s-aisyah" }
     ]}
   ],
+  "incidents": [
+    {"id": "inc-1", "rid": "r-chua", "type": "fall", "t": 190, "reportedT": 205, "by": "s-hidayah", "where": "Bathroom, 2B-06", "what": "Found sitting on the bathroom floor at 03:10 by the night nurse, not witnessed. Said she got up to the toilet without her frame and slipped. Not sure if she hit her head.", "injury": "Small skin tear on the left forearm, 2 cm", "harm": 3, "action": "Checked for injury before moving her, then helped up with two staff. GCS 15, pupils equal and reactive. Skin tear cleaned and dressed. Bed alarm switched on and frame left within reach.", "fall": {"witnessed": false, "headStrike": "not sure", "bloodThinner": false, "neuroObs": true}, "told": {"doctor": {"t": 220, "by": "s-hidayah", "who": "Dr Lim Wei Ming", "how": "Phone call"}}, "status": "open"},
+    {"id": "inc-2", "rid": "r-ho", "type": "fall", "t": -11640, "reportedT": -11625, "by": "s-faiz", "where": "Beside his bed, 2B-11", "what": "Heard a thud at 22:00 and found him on the floor beside his bed. Unwitnessed. He was trying to walk to the door.", "injury": "None found", "harm": 4, "action": "Checked for injury, helped up with two staff, neuro observations started.", "fall": {"witnessed": false, "headStrike": "no", "bloodThinner": false, "neuroObs": true}, "told": {"family": {"t": -11580, "by": "s-hidayah", "who": "Ho Yee Ling", "how": "Phone call"}, "doctor": {"t": -11600, "by": "s-hidayah", "who": "Dr Lim Wei Ming", "how": "Phone call"}}, "status": "closed", "review": {"t": -10100, "by": "s-mary", "factors": ["Unwitnessed, at night", "Confusion or delirium", "Sedating or BP medicine"], "findings": "Evening restlessness before quetiapine took effect. Falls risk reassessed: Morse 45, high.", "actions": "Low bed and floor mat from tonight. Toilet round at 21:30. Ask Dr Lim to review quetiapine timing."}, "closed": {"t": -10050, "by": "s-mary", "summary": "No injury. Low bed, mat and an earlier toilet round in place. Quetiapine timing review requested."}}
+  ],
   "handovers": [
     { "id": "h-1", "shift": "night", "t": 425, "from": "s-hidayah", "to": "s-aisyah", "summary": "Quiet night. Goh Kim Huat febrile 37.9 at 06:00, watch. Ho Peng refused quetiapine. Wong Mei Fong PRN morphine at 05:30." }
   ],
   "audit": [
+    { "t": -11625, "by": "s-faiz", "action": "Incident reported", "rid": "r-ho", "detail": "Fall, no harm. Found on the floor beside his bed at 22:00, unwitnessed. Neuro observations scheduled for 24 hours." },
+    { "t": -10050, "by": "s-mary", "action": "Incident closed", "rid": "r-ho", "detail": "Fall. No injury. Low bed, mat and an earlier toilet round in place. Quetiapine timing review requested." },
     { "t": -620, "by": "s-drlim", "action": "Order stopped", "rid": "r-lim", "detail": "Amlodipine 10 mg tablet stopped. Reason: systolic BP 96 to 104 for three days and dizzy on standing. Pharmacy informed; stays in the blister pack until the next cycle." },
     { "t": -114, "by": "s-hidayah", "action": "Dose refused", "rid": "r-ho", "detail": "Quetiapine 12.5 mg, 22:00 dose. Reason: resident refused." },
     { "t": -110, "by": "s-hidayah", "action": "Dose given", "rid": "r-ho", "detail": "Donepezil 5 mg, 22:00 dose." },
+    { "t": 205, "by": "s-hidayah", "action": "Incident reported", "rid": "r-chua", "detail": "Fall, minor harm. Found sitting on the bathroom floor at 03:10, not witnessed. Neuro observations scheduled for 24 hours." },
+    { "t": 220, "by": "s-hidayah", "action": "Doctor told of incident", "rid": "r-chua", "detail": "Fall: Dr Lim Wei Ming, phone call." },
     { "t": 330, "by": "s-hidayah", "action": "PRN given", "rid": "r-wong", "detail": "Morphine oral solution 2.5 mg. Witness: Faiz Rahim (EN). CD register: 84 → 82.75 mL." },
     { "t": 364, "by": "s-hidayah", "action": "Dose given", "rid": "r-maria", "detail": "Levothyroxine 50 mcg, 06:00 dose. Blister pack scanned." },
     { "t": 425, "by": "s-hidayah", "action": "Handover signed", "rid": null, "detail": "Night to AM shift. Received by Aisyah Rahman (RN)." },

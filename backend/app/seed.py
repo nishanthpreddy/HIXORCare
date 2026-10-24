@@ -1,4 +1,5 @@
-"""Load the Ward 2B demo data (shared/seed.json) into PostgreSQL, timed relative to today.
+"""Load the demo home into PostgreSQL, timed relative to today: Ward 2B (shared/seed.json, which also holds the
+home, shifts and staff) and Ward 3A (shared/seed-3a.json).
 
 Run: python -m app.seed
 """
@@ -17,6 +18,7 @@ from .db import Clock, SessionLocal, today_sg
 from .rules import SHARED, news2
 
 DEMO_PIN = "1234"
+WARD_FILES = ["seed.json", "seed-3a.json"]
 
 
 def load(db: Session, day: date | None = None) -> None:
@@ -31,12 +33,29 @@ def load(db: Session, day: date | None = None) -> None:
 
     h = raw["home"]
     db.add(m.Home(id=h["id"], name=h["name"], organisation=h["organisation"]))
-    w = raw["ward"]
-    db.add(m.Ward(id=w["id"], home_id=h["id"], code=w["code"], name=w["name"], beds=w["beds"]))
+    wards = [raw] + [json.loads((SHARED / f).read_text()) for f in WARD_FILES[1:]]
+    for wr in wards:
+        w = wr["ward"]
+        db.add(m.Ward(id=w["id"], home_id=h["id"], code=w["code"], name=w["name"], unit=w["unit"], beds=w["beds"]))
+    db.flush()
     pin = hash_pin(DEMO_PIN)
     for s in raw["staff"]:
-        db.add(m.Staff(id=s["id"], home_id=h["id"], name=s["name"], short=s["short"], role=s["role"], title=s["title"], shift=s["shift"], pin_hash=pin))
+        db.add(m.Staff(id=s["id"], home_id=h["id"], name=s["name"], short=s["short"], role=s["role"], title=s["title"], shift=s["shift"], wards=s["wards"], pin_hash=pin))
     db.flush()
+
+    for wr in wards:
+        load_ward(db, wr, clk)
+    db.flush()
+    for e in sorted((e for wr in wards for e in wr["audit"]), key=lambda e: e["t"]):
+        append_audit(db, e["by"], e["action"], e["rid"], e["detail"], dt(e["t"]))
+
+    db.add(m.DemoClock(id=1, day=day, base_minutes=raw["clockStart"], anchor=datetime.now(timezone.utc)))
+    db.commit()
+
+
+def load_ward(db: Session, raw: dict, clk: Clock) -> None:
+    dt = clk.dt
+    w = raw["ward"]
 
     for r in raw["residents"]:
         db.add(m.Resident(
@@ -83,7 +102,7 @@ def load(db: Session, day: date | None = None) -> None:
     for v in raw["vitals"]:
         score = news2(rr=v["rr"], spo2=v["spo2"], o2=v["o2"], sbp=v["sbp"], pulse=v["pulse"], acvpu=v["acvpu"], temp=v["temp"])
         db.add(m.Vitals(resident_id=v["rid"], at=dt(v["t"]), rr=v["rr"], spo2=v["spo2"], o2=v["o2"], sbp=v["sbp"], dbp=v["dbp"], pulse=v["pulse"],
-                        acvpu=v["acvpu"], temp=v["temp"], news2=score, by_id=v["by"], note=v.get("note")))
+                        acvpu=v["acvpu"], temp=v["temp"], news2=score, by_id=v["by"], note=v.get("note"), neuro=v.get("neuro")))
     for g in raw["glucose"]:
         db.add(m.Glucose(resident_id=g["rid"], at=dt(g["t"]), value=g["value"], by_id=g["by"], note=g.get("note")))
     for a in raw["alerts"]:
@@ -111,17 +130,20 @@ def load(db: Session, day: date | None = None) -> None:
         db.flush()
         for ms in wd["measurements"]:
             db.add(m.WoundMeasurement(wound_id=wd["id"], at=dt(ms["t"]), length=ms["length"], width=ms["width"], depth=ms["depth"], bed=ms["bed"], exudate=ms["exudate"], by_id=ms["by"]))
+    db.flush()
+    told = lambda x: {k: {"at": dt(v["t"]).isoformat(), "by": v["by"], "who": v["who"], "how": v["how"]} for k, v in x.items()}
+    for i in raw.get("incidents", []):
+        rv, cl = i.get("review"), i.get("closed")
+        db.add(m.Incident(id=i["id"], resident_id=i["rid"], type=i["type"], at=dt(i["t"]), reported_at=dt(i["reportedT"]), by_id=i["by"], place=i["where"],
+                          what=i["what"], injury=i["injury"], harm=i["harm"], action=i["action"], fall=i.get("fall"), told=told(i["told"]), status=i["status"],
+                          review={k: rv[k] for k in ("factors", "findings", "actions")} if rv else None, review_by=rv["by"] if rv else None,
+                          review_at=dt(rv["t"]) if rv else None, closed_by=cl["by"] if cl else None, closed_at=dt(cl["t"]) if cl else None,
+                          close_summary=cl["summary"] if cl else None, moh_due=dt(i["mohDue"]) if i.get("mohDue") is not None else None))
     for ho in raw["handovers"]:
         db.add(m.Handover(id=ho["id"], shift=ho["shift"], at=dt(ho["t"]), from_id=ho["from"], to_id=ho["to"], summary=ho["summary"]))
-    db.flush()
-    for e in raw["audit"]:
-        append_audit(db, e["by"], e["action"], e["rid"], e["detail"], dt(e["t"]))
-
-    db.add(m.DemoClock(id=1, day=day, base_minutes=raw["clockStart"], anchor=datetime.now(timezone.utc)))
-    db.commit()
 
 
 if __name__ == "__main__":
     with SessionLocal() as s:
         load(s)
-    print("Seeded Ward 2B demo data.")
+    print("Seeded the demo home: Ward 2B and Ward 3A.")

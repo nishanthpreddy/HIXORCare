@@ -119,6 +119,7 @@ export function until(t: number, now: number) {
   const m = Math.round(t - now)
   if (m <= 0) return m === 0 ? 'now' : `${-m} min overdue`
   if (m < 60) return `in ${m} min`
+  if (m >= 2160) return `in ${Math.round(m / 1440)} days`
   return `in ${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ''}`
 }
 

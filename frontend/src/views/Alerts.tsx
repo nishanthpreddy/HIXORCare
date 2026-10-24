@@ -47,7 +47,7 @@ export function Alerts() {
                   <div className="detail">{a.detail}</div>
                   <div className="meta">
                     <span>Raised {when(a.t, s.day)} ({ago(a.t, s.now)})</span>
-                    {a.dueT && a.status !== 'resolved' && <span style={{ color: a.dueT < s.now ? 'var(--crit)' : undefined, fontWeight: 650 }}>{a.dueLabel ?? 'Due'} {clock(a.dueT)} · {until(a.dueT, s.now)}</span>}
+                    {a.dueT && a.status !== 'resolved' && <span style={{ color: a.dueT < s.now ? 'var(--crit)' : undefined, fontWeight: 650 }}>{a.dueLabel ?? 'Due'} {a.dueT - s.now > 720 ? when(a.dueT, s.day).replace(/^Tomorrow/, 'tomorrow') : clock(a.dueT)} · {until(a.dueT, s.now)}</span>}
                     {a.status === 'resolved' && <span>Closed {a.resolvedT !== undefined ? when(a.resolvedT, s.day) : ''} by {staff(a.resolvedBy)?.short}</span>}
                   </div>
                 </div>
