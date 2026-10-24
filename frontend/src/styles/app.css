@@ -459,9 +459,66 @@ p { margin: 0; }
 
 .fade-in { animation: fade .25s ease-out; }
 
+/* ---------- Nurse manager overview ---------- */
+.mgr-kpis { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 14px; }
+.mgr-kpis .stat-card { text-align: left; color: inherit; }
+.mgr-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; align-items: start; }
+.mgr-grid.wide-left { grid-template-columns: 1.25fr 1fr; }
+.mgr-grid > * { min-width: 0; }
+.now-row.as-btn { width: 100%; text-align: left; background: none; border: 0; color: inherit; cursor: pointer; }
+.now-row.as-btn:hover, .cd-row:hover, .due-item:hover { background: var(--surface-2); }
+.now-row.as-btn > svg { color: var(--muted); flex: none; }
+.team { display: flex; flex-direction: column; padding: 8px 18px 14px; gap: 2px; }
+.team-row { display: flex; align-items: center; gap: 12px; padding: 7px 0; }
+.team-row .grow { min-width: 0; display: flex; flex-direction: column; }
+.team-row b { font-size: 14px; }
+.cd-row { display: flex; align-items: center; gap: 12px; padding: 12px 18px; width: 100%; text-align: left; background: none; border: 0; color: inherit; cursor: pointer; }
+.cd-row .grow { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cd-bal { font-size: 20px; font-weight: 750; white-space: nowrap; }
+.cd-bal small { font-size: 12px; color: var(--muted); font-weight: 600; }
+.mgr-figures { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.mgr-figures > div { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: var(--r); background: var(--surface-2); min-width: 0; }
+.mgr-figures b { font-size: 24px; font-weight: 750; letter-spacing: -0.02em; line-height: 1.1; }
+.mgr-figures b small { font-size: 14px; color: var(--muted); }
+.medchart { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.medchart-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--ink-2); }
+.medchart-legend span, .medchart-tip span { display: inline-flex; align-items: center; gap: 6px; }
+.medchart i.ok, .medchart-legend i, .medchart-tip i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
+.medchart i.ok { background: var(--ok); } .medchart i.caution { background: var(--caution); } .medchart i.warn { background: var(--warn); }
+.medchart-plot {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; height: 190px; padding-top: 8px;
+}
+.medchart-col { position: relative; display: grid; grid-template-rows: 1fr auto auto; justify-items: center; min-width: 0; outline: none; }
+.medchart-col::before { content: ''; position: absolute; left: -5px; right: -5px; top: calc(100% - 36px); border-top: 1px solid var(--line-strong); }
+.medchart-bar { align-self: end; width: min(34px, 70%); display: flex; flex-direction: column; gap: 2px; border-radius: 4px 4px 0 0; overflow: hidden; min-height: 4px; }
+.medchart-bar i { display: block; width: 100%; min-height: 3px; }
+.medchart-col:hover .medchart-bar, .medchart-col:focus-visible .medchart-bar { filter: brightness(1.08); box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent-soft); }
+.medchart-x { font-size: 12px; font-weight: 650; color: var(--ink-2); margin-top: 6px; }
+.medchart-n { font-size: 11.5px; color: var(--muted); }
+.medchart-tip {
+  position: absolute; bottom: calc(100% - 30px); left: 50%; transform: translateX(-50%); z-index: 5; display: none; flex-direction: column; gap: 4px;
+  background: var(--surface); border: 1px solid var(--line-strong); box-shadow: var(--shadow-lg); border-radius: 10px; padding: 10px 12px; font-size: 12.5px; white-space: nowrap; color: var(--ink);
+}
+.medchart-col:hover .medchart-tip, .medchart-col:focus-visible .medchart-tip { display: flex; }
+.medchart-col:first-child .medchart-tip { left: 0; transform: none; }
+.medchart-col:last-child .medchart-tip { left: auto; right: 0; transform: none; }
+.mar.risk { min-width: 820px; }
+.mar.risk tbody tr { cursor: pointer; }
+.mar.risk tbody tr:hover, .mar.risk tbody tr:focus-visible { background: var(--surface-2); outline: none; }
+.mar.risk tr.away { opacity: .6; }
+.due-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; padding: 14px 18px 18px; }
+.due-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface);
+  text-align: left; color: inherit; cursor: pointer; min-width: 0;
+}
+.due-item .grow { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.due-item .chip { flex: none; white-space: nowrap; }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 1180px) {
   .today-strip { grid-template-columns: 1fr 1fr; }
+  .mgr-kpis { grid-template-columns: 1fr 1fr; }
+  .mgr-grid, .mgr-grid.wide-left { grid-template-columns: 1fr; }
   .two-col { grid-template-columns: 1fr; }
   .round { grid-template-columns: 300px 1fr; }
 }
@@ -503,6 +560,11 @@ p { margin: 0; }
 @media (max-width: 520px) {
   .today-strip { grid-template-columns: 1fr 1fr; gap: 10px; }
   .today-strip > :first-child { grid-column: 1 / -1; }
+  .mgr-kpis { gap: 10px; }
+  .mgr-kpis > :first-child, .mgr-kpis > :last-child { grid-column: 1 / -1; }
+  .mgr-figures { grid-template-columns: 1fr 1fr; }
+  .medchart-plot { gap: 4px; }
+  .due-grid { grid-template-columns: 1fr; padding: 12px 14px 14px; }
   .stat-card { padding: 12px 14px; gap: 4px; }
   .stat-card .big { font-size: 24px; }
   .now-list .now-row { padding: 12px 14px; gap: 10px; flex-wrap: wrap; }

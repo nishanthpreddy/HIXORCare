@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { createApi, type Api } from './api/client'
 import type { ActionResult, Snapshot, Staff } from './domain/types'
 
-export type View = 'today' | 'round' | 'residents' | 'resident' | 'handover' | 'alerts' | 'audit'
+export type View = 'manager' | 'today' | 'round' | 'residents' | 'resident' | 'handover' | 'alerts' | 'audit'
 export interface Route { view: View; rid?: string; tab?: string }
 export interface Toast { id: number; text: string; tone: 'ok' | 'critical' | 'info' }
 type Theme = 'system' | 'light' | 'dark'
@@ -35,7 +35,7 @@ export const useApp = () => {
 function routeFromHash(): Route {
   const h = location.hash.replace('#', '')
   if (h.startsWith('res-')) return { view: 'resident', rid: 'r-' + h.slice(4) }
-  if (['today', 'round', 'residents', 'handover', 'alerts', 'audit'].includes(h)) return { view: h as View }
+  if (['manager', 'today', 'round', 'residents', 'handover', 'alerts', 'audit'].includes(h)) return { view: h as View }
   return { view: 'today' }
 }
 

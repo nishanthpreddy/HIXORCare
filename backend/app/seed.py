@@ -73,7 +73,7 @@ def load(db: Session, day: date | None = None) -> None:
     for a in raw["administrations"]:
         db.add(m.Administration(
             order_id=a["orderId"], resident_id=rid_of[a["orderId"]], slot=a["slot"], day=clk.dt(a["day"] * 1440).date(), outcome=a["outcome"],
-            reason=a.get("reason"), note=a.get("note"), scan=a.get("scan"), at=dt(a["t"]), by_id=a["by"],
+            reason=a.get("reason"), note=a.get("note"), scan=a.get("scan"), at=dt(a["t"]), by_id=a["by"], values=a.get("values"), witness_id=a.get("witness"),
             prepared_by=a["by"] if a["outcome"] == "given" else None,
         ))
     for p in raw["prn"]:

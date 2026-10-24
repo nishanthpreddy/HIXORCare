@@ -61,3 +61,8 @@ def test_actions_need_a_session(client):
 
 def test_bright_interface_is_a_placeholder(client):
     assert client.post("/api/integrations/bright/referrals").status_code == 501
+
+
+def test_snapshot_carries_a_week_of_medication_history(ward):
+    days = {a["day"] for a in ward.snap()["administrations"]}
+    assert min(days) == -6 and 0 in days

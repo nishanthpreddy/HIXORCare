@@ -13,6 +13,7 @@ import { ResidentView } from './views/Resident'
 import { HandoverView } from './views/Handover'
 import { Alerts } from './views/Alerts'
 import { Audit } from './views/Audit'
+import { Manager } from './views/Manager'
 
 export default function App() {
   return (
@@ -39,7 +40,8 @@ function Gate() {
   )
 }
 
-const NAV: { view: View; label: string; icon: string; hideSm?: boolean }[] = [
+const NAV: { view: View; label: string; icon: string; hideSm?: boolean; roles?: string[] }[] = [
+  { view: 'manager', label: 'Overview', icon: 'chart', roles: ['NM'] },
   { view: 'today', label: 'Today', icon: 'today' },
   { view: 'round', label: 'Med round', icon: 'pill' },
   { view: 'residents', label: 'Residents', icon: 'residents' },
@@ -51,7 +53,9 @@ const NAV: { view: View; label: string; icon: string; hideSm?: boolean }[] = [
 const IDLE_LOCK_MS = 2 * 60_000
 
 function Shell() {
-  const { route, go, s, lock } = useApp()
+  const { route: asked, go, s, lock, me } = useApp()
+  // The manager overview is for nurse managers; anyone else lands on Today.
+  const route = asked.view === 'manager' && me?.role !== 'NM' ? { view: 'today' as View } : asked
   useEffect(() => {
     let t = setTimeout(lock, IDLE_LOCK_MS)
     const bump = () => { clearTimeout(t); t = setTimeout(lock, IDLE_LOCK_MS) }
@@ -65,7 +69,7 @@ function Shell() {
     <div className="shell">
       <nav className="rail" aria-label="Main">
         <div className="rail-logo"><Logo size={42} /></div>
-        {NAV.map((n) => (
+        {NAV.filter((n) => !n.roles || (me && n.roles.includes(me.role))).map((n) => (
           <button key={n.view} className={`rail-item${n.hideSm ? ' hide-sm' : ''}`} aria-current={active === n.view ? 'page' : undefined} onClick={() => go({ view: n.view })}>
             <Icon name={n.icon} />
             {n.label}
@@ -80,6 +84,7 @@ function Shell() {
           <div className="content flush"><Round /></div>
         ) : (
           <main className="content">
+            {route.view === 'manager' && <Manager />}
             {route.view === 'today' && <Today />}
             {route.view === 'residents' && <Residents />}
             {route.view === 'resident' && <ResidentView key={route.rid} />}
@@ -107,7 +112,7 @@ function RailFoot() {
 }
 
 const TITLES: Record<View, string> = {
-  today: 'Today', round: 'Medication round', residents: 'Residents', resident: 'Resident', handover: 'Shift handover', alerts: 'Alerts', audit: 'Audit trail',
+  manager: 'Ward overview', today: 'Today', round: 'Medication round', residents: 'Residents', resident: 'Resident', handover: 'Shift handover', alerts: 'Alerts', audit: 'Audit trail',
 }
 
 function TopBar() {
@@ -171,7 +176,7 @@ function DemoMenu({ onClose }: { onClose: () => void }) {
 }
 
 function Lock() {
-  const { s, signIn } = useApp()
+  const { s, signIn, go } = useApp()
   const [who, setWho] = useState<Staff | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const shift = shiftNow(s.now)
@@ -230,6 +235,7 @@ function Lock() {
               onDone={async (pin) => {
                 const res = await signIn(who.id, pin)
                 if (!res.ok) setErr(res.message)
+                else if (who.role === 'NM') go({ view: 'manager' })
               }}
             />
             <button className="btn ghost" onClick={() => setWho(null)}><Icon name="left" />Not you?</button>

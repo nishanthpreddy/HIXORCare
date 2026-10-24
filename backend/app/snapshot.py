@@ -10,6 +10,7 @@ from . import models as m
 from .db import Clock
 
 AUDIT_LIMIT = 300
+MED_HISTORY_DAYS = 6  # the nurse manager's medication trend covers today and the six days before
 
 
 def _f(x):
@@ -64,7 +65,7 @@ def build(db: Session, clk: Clock, ward_id: str) -> dict:
         "administrations": [{
             "id": str(a.id), "orderId": a.order_id, "rid": a.resident_id, "slot": a.slot, "day": (a.day - clk.day).days, "outcome": a.outcome,
             "reason": a.reason, "note": a.note, "values": a.values, "witness": a.witness_id, "preparedBy": a.prepared_by, "scan": a.scan, "t": T(a.at), "by": a.by_id,
-        } for a in db.scalars(select(m.Administration).where(m.Administration.resident_id.in_(rids), m.Administration.day >= clk.day - timedelta(days=1)))],
+        } for a in db.scalars(select(m.Administration).where(m.Administration.resident_id.in_(rids), m.Administration.day >= clk.day - timedelta(days=MED_HISTORY_DAYS)))],
         "idChecks": [{"rid": c.resident_id, "slot": c.slot, "t": T(c.at), "by": c.by_id, "method": c.method, "reason": c.reason}
                      for c in db.scalars(select(m.IdentityCheck).where(m.IdentityCheck.resident_id.in_(rids), m.IdentityCheck.day == clk.day))],
         "prn": [{

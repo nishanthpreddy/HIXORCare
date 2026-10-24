@@ -10,7 +10,7 @@ export interface Api {
   reset(): Promise<void>
 }
 
-const STORE_KEY = 'hixor-care-demo-v2'
+const STORE_KEY = 'hixor-care-demo-v3'
 
 class DemoApi implements Api {
   mode = 'demo' as const

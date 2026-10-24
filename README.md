@@ -60,6 +60,10 @@ Tests: `cd backend && DATABASE_URL=postgresql+psycopg://hixor@127.0.0.1:5433/hix
 6. **Mr Goh**: record obs, NEWS2 rises to 6, and the app drafts an **SBAR** for the doctor that the nurse must review.
 7. **Handover**: summaries since shift start, the watch list and care left undone; the incoming nurse signs with a PIN.
 8. **Audit**: every action is hash-chained; the chain check shows *Chain intact*.
+9. **Nurse manager**: lock the tablet and sign in as Mary Lim (NM). *Overview* shows occupancy, alerts nobody has
+   acknowledged, admission medicines awaiting verification, the team on shift, controlled drug balances, seven days of
+   medication timeliness, patterns to review (repeated refusals, held doses, PRN use, antipsychotic reviews), a clinical
+   risk register for every resident, and assessments and care plan reviews that are due.
 
 ## Safety rules implemented
 

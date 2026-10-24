@@ -43,6 +43,7 @@ const P: Record<string, string> = {
   layers: 'M12 3l9 5-9 5-9-5zM3 13l9 5 9-5',
   filter: 'M4 5h16l-6 8v6l-4-2v-4z',
   more: 'M5 12h.01M12 12h.01M19 12h.01',
+  chart: 'M4 20h16M7 16v-5M12 16V6M17 16v-8',
 }
 
 export function Icon({ name, size, className, title }: { name: keyof typeof P | string; size?: number; className?: string; title?: string }) {
