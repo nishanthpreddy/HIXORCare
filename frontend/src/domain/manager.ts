@@ -1,6 +1,6 @@
 // What the nurse manager looks at: the whole ward at once, the last seven days, and what needs a manager's decision.
 import { ASSESSMENTS, band, currentSlot, dateOf, dosesInSlot, findAdmin, fullName, levelTone, residentOf, scoreTone, slotMin, until, when, windowMin, awaitingVerification } from './clinical'
-import { closeBlockers, harmOf, isSerious, typeLabel } from './incidents'
+import { closeBlockers, harmOf, isSerious, mohStage, typeLabel } from './incidents'
 import { activeAlerts, latestAssessment, latestVitals, roundProgress, shiftNow, type Tone } from './selectors'
 import type { Resident, Snapshot } from './types'
 
@@ -200,9 +200,15 @@ export function managerQueue(s: Snapshot): ManagerItem[] {
   for (const i of s.incidents.filter((x) => x.status !== 'closed')) {
     const r = residentOf(s, i.rid)!
     const left = closeBlockers(s, i)
+    const stage = mohStage(i)
+    const title = {
+      escalate: `${typeLabel(i.type)}: escalate to the Head of Nursing`,
+      notify: `${typeLabel(i.type)}: notify MOH ${i.mohDue !== undefined ? until(i.mohDue, s.now) : 'within 72 hours'}`,
+      rca: `${typeLabel(i.type)}: final RCA to MOH by ${i.rcaDue !== undefined ? at(i.rcaDue, s) : '30 days'}`,
+    }[stage as 'escalate' | 'notify' | 'rca'] ?? `${typeLabel(i.type)} to review: ${harmOf(i.harm).label.toLowerCase()}`
     out.push({
-      key: i.id, rid: i.rid, incident: i.id, to: 'incident', tone: i.type === 'abuse' || isSerious(i) ? 'critical' : 'warning',
-      title: i.type === 'abuse' && i.mohDue ? `Abuse allegation: notify MOH ${until(i.mohDue, s.now)}` : `${typeLabel(i.type)} to review: ${harmOf(i.harm).label.toLowerCase()}`,
+      key: i.id, rid: i.rid, incident: i.id, to: 'incident', tone: stage === 'escalate' || stage === 'notify' || i.type === 'abuse' || isSerious(i) ? 'critical' : 'warning',
+      title,
       detail: `${fullName(r)} · ${at(i.t, s)}${left.length ? ` · ${left.length} step${left.length > 1 ? 's' : ''} before closing` : ' · ready to close'}`,
     })
   }

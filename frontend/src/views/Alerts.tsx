@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useApp } from '../store'
 import { Icon } from '../ui/Icon'
 import { Avatar, Chip } from '../ui/kit'
-import { ago, clock, fullName, until, when } from '../domain/clinical'
+import { ago, clock, fullName, isManager, until, when } from '../domain/clinical'
 import type { Alert } from '../domain/types'
 
 /** Unanswered alerts move to the next nurse in line after this many minutes. */
@@ -14,7 +14,7 @@ export function Alerts() {
   const list = s.alerts
     .filter((a) => (show === 'active' ? a.status !== 'resolved' : a.status === 'resolved'))
     .sort((a, b) => sev(a) - sev(b) || b.t - a.t)
-  const canClose = me?.role === 'RN' || me?.role === 'NM'
+  const canClose = me?.role === 'RN' || isManager(me?.role)
   return (
     <div className="page">
       <div className="row wrap">

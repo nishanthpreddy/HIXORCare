@@ -44,7 +44,7 @@ class Staff(Base):
     home_id: Mapped[str] = mapped_column(ForeignKey("homes.id"))
     name: Mapped[str] = mapped_column(String(120))
     short: Mapped[str] = mapped_column(String(40))
-    role: Mapped[str] = mapped_column(String(4))  # RN EN CA NM DR PH
+    role: Mapped[str] = mapped_column(String(4))  # RN EN CA NM HON DR PH
     title: Mapped[str] = mapped_column(String(120))
     shift: Mapped[str | None] = mapped_column(String(10))
     wards: Mapped[list] = mapped_column(Json, default=list)  # wards this person works on; a nurse manager covers one or more
@@ -233,6 +233,10 @@ class Incident(Base):
     closed_at: Mapped[datetime | None] = mapped_column(TS)
     close_summary: Mapped[str | None] = mapped_column(Text)
     moh_due: Mapped[datetime | None] = mapped_column(TS)
+    escalated: Mapped[dict | None] = mapped_column(Json)  # {"at", "by", "note"}: preliminary report to the Head of Nursing
+    moh: Mapped[dict | None] = mapped_column(Json)  # {"at", "by", "decision": notified | not-reportable, "ref", "reason"}
+    rca_due: Mapped[datetime | None] = mapped_column(TS)
+    rca: Mapped[dict | None] = mapped_column(Json)  # {"at", "by", "ref", "summary"}
 
 
 class Glucose(Base):

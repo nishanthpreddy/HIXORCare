@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react'
 import { useApp } from '../store'
 import { Icon } from '../ui/Icon'
 import { Avatar, Banner, Chip, Choice, Ring, Sheet } from '../ui/kit'
-import { clock, fullName, residentOf, until, when } from '../domain/clinical'
+import { clock, fullName, isManager, residentOf, until, when } from '../domain/clinical'
 import {
-  FALL_FACTORS, HARM, INCIDENT_TYPES, closeBlockers, harmOf, isSerious, needsNeuro, onBloodThinner, postFallProgress, typeLabel,
+  FALL_FACTORS, HARM, INCIDENT_TYPES, RCA_DAYS, closeBlockers, harmOf, isSerious, mohStage, mustEscalate, needsNeuro, onBloodThinner, postFallProgress, typeLabel,
 } from '../domain/incidents'
 import type { HarmLevel, Incident, IncidentType } from '../domain/types'
 
@@ -185,13 +185,18 @@ export function IncidentSheet({ id, onClose }: { id: string; onClose: () => void
   const [tell, setTell] = useState<'family' | 'doctor' | null>(null)
   const [reviewing, setReviewing] = useState(false)
   const [closing, setClosing] = useState(false)
+  const [step, setStep] = useState<'escalate' | 'moh' | 'rca' | null>(null)
   const blockers = useMemo(() => (i ? closeBlockers(s, i) : []), [s, i])
   if (!i) return null
   const r = residentOf(s, i.rid)!
   const h = harmOf(i.harm)
   const pf = i.type === 'fall' ? postFallProgress(s, i) : null
-  const nm = me?.role === 'NM'
-  const canTell = me && ['RN', 'EN', 'NM'].includes(me.role) && i.status !== 'closed'
+  const nm = isManager(me?.role)
+  const hon = me?.role === 'HON'
+  const canTell = me && ['RN', 'EN', 'NM', 'HON'].includes(me.role) && i.status !== 'closed'
+  const canEscalate = me && ['RN', 'NM'].includes(me.role) && !i.escalated && i.status !== 'closed'
+  const stage = mohStage(i)
+  const closeLocked = !!i.escalated && !hon
   return (
     <Sheet title={`${typeLabel(i.type)} · ${fullName(r)}`} sub={`${when(i.t, s.day)} · ${i.where || 'Place not recorded'} · reported by ${staff(i.by)?.name}`} icon={INCIDENT_TYPES.find((x) => x.value === i.type)?.icon} tone={i.status === 'closed' ? 'ok' : isSerious(i) ? 'critical' : 'warning'} onClose={onClose} wide>
       <div className="row wrap" style={{ gap: 6 }}>
@@ -201,7 +206,7 @@ export function IncidentSheet({ id, onClose }: { id: string; onClose: () => void
         {i.fall && <Chip tone={i.fall.headStrike === 'no' ? undefined : 'warning'} lg>Head strike: {i.fall.headStrike}</Chip>}
         {i.fall?.bloodThinner && <Chip tone="warning" lg>On a blood thinner</Chip>}
       </div>
-      {i.mohDue && i.status !== 'closed' && <Banner tone="critical" icon="shield" title={`Notify MOH by ${when(i.mohDue, s.day)} (${until(i.mohDue, s.now)})`}>Preliminary notification within 72 hours, by the Head of Nursing or a key appointment holder (LC §21). Final report within 30 days.</Banner>}
+      {stage !== 'none' && <MohSteps i={i} canEscalate={!!canEscalate} hon={hon} onStep={setStep} />}
 
       <dl className="kv">
         <dt>What happened</dt><dd>{i.what}</dd>
@@ -255,11 +260,21 @@ export function IncidentSheet({ id, onClose }: { id: string; onClose: () => void
             {blockers.length > 0 && <Banner tone="info" title="Before this can be closed">{blockers.join(' · ')}</Banner>}
             <div className="row wrap" style={{ gap: 8, justifyContent: 'flex-end' }}>
               <button className="btn" onClick={() => setReviewing(true)}>{i.review ? 'Edit review' : i.type === 'fall' ? 'Post-fall analysis' : 'Record the review'}</button>
-              <button className="btn primary" disabled={blockers.length > 0} onClick={() => setClosing(true)}>Close the incident</button>
+              {stage === 'none' && canEscalate && <button className="btn ghost" onClick={() => setStep('escalate')}>Escalate to Head of Nursing</button>}
+              <button className="btn primary" disabled={blockers.length > 0 || closeLocked} onClick={() => setClosing(true)}>Close the incident</button>
             </div>
+            {closeLocked && <p className="tiny muted" style={{ textAlign: 'right' }}>Escalated incidents are signed off and closed by the Head of Nursing.</p>}
           </div>
-        ) : <p className="tiny muted">The nurse manager reviews and closes incidents.</p>
+        ) : (
+          <div className="stack" style={{ gap: 8 }}>
+            {stage === 'none' && canEscalate && <div className="row" style={{ justifyContent: 'flex-end' }}><button className="btn ghost" onClick={() => setStep('escalate')}>Escalate to Head of Nursing</button></div>}
+            <p className="tiny muted">The nurse manager reviews and closes incidents.</p>
+          </div>
+        )
       )}
+      {step === 'escalate' && <EscalateSheet i={i} onClose={() => setStep(null)} />}
+      {step === 'moh' && <MohSheet i={i} onClose={() => setStep(null)} />}
+      {step === 'rca' && <RcaSheet i={i} onClose={() => setStep(null)} />}
 
       {tell && <TellSheet i={i} party={tell} onClose={() => setTell(null)} />}
       {reviewing && <ReviewSheet i={i} onClose={() => setReviewing(false)} />}
@@ -269,6 +284,132 @@ export function IncidentSheet({ id, onClose }: { id: string; onClose: () => void
           if (res.ok) setClosing(false)
         }} />
       )}
+    </Sheet>
+  )
+}
+
+/** The MOH reporting chain: nurse manager escalates, Head of Nursing notifies MOH within 72 hours, then submits the RCA within 30 days. */
+function MohSteps({ i, canEscalate, hon, onStep }: { i: Incident; canEscalate: boolean; hon: boolean; onStep: (s: 'escalate' | 'moh' | 'rca') => void }) {
+  const { s, staff } = useApp()
+  const stage = mohStage(i)
+  const open = i.status !== 'closed'
+  const late = (t?: number) => t !== undefined && t < s.now
+  const steps = [
+    {
+      key: 'escalate', title: 'Escalated to the Head of Nursing',
+      done: i.escalated && `${staff(i.escalated.by)?.name}, ${when(i.escalated.t, s.day)}. ${i.escalated.note}`,
+      todo: mustEscalate(i) ? 'Required now: abuse allegation or moderate to severe harm. Send the preliminary report.' : 'Optional for this incident.',
+      action: open && stage === 'escalate' && canEscalate ? 'Escalate' : null,
+    },
+    {
+      key: 'moh', title: i.moh?.decision === 'not-reportable' ? 'Not reportable to MOH' : 'MOH notified',
+      done: i.moh && (i.moh.decision === 'notified' ? `FormSG reference ${i.moh.ref} · ${staff(i.moh.by)?.name}, ${when(i.moh.t, s.day)}` : `${i.moh.reason} · ${staff(i.moh.by)?.name}, ${when(i.moh.t, s.day)}`),
+      todo: i.mohDue ? `Head of Nursing reviews and notifies MOH by ${when(i.mohDue, s.day)} (${until(i.mohDue, s.now)}).` : 'Head of Nursing reviews and notifies MOH within 72 hours.',
+      urgent: late(i.mohDue), action: open && stage === 'notify' && hon ? 'Record decision' : null,
+    },
+    ...(i.moh?.decision === 'not-reportable' ? [] : [{
+      key: 'rca', title: 'Final RCA submitted to MOH',
+      done: i.rca && `Reference ${i.rca.ref} · ${staff(i.rca.by)?.name}, ${when(i.rca.t, s.day)}. ${i.rca.summary}`,
+      todo: i.rcaDue ? `Due ${when(i.rcaDue, s.day)} (${until(i.rcaDue, s.now)}), ${RCA_DAYS} calendar days.` : `Within ${RCA_DAYS} calendar days.`,
+      urgent: late(i.rcaDue), action: open && stage === 'rca' && hon ? 'Submit RCA' : null,
+    }]),
+  ]
+  return (
+    <div className="moh-steps" aria-label="MOH reporting">
+      <div className="row" style={{ gap: 8 }}><Icon name="shield" size={18} /><b>MOH reporting</b><span className="spacer" /><span className="tiny muted">LC §21 · HCSA</span></div>
+      {steps.map((x, n) => (
+        <div key={x.key} className={`moh-step${x.done ? ' done' : ''}${!x.done && 'urgent' in x && x.urgent ? ' late' : ''}`}>
+          <span className="moh-dot">{x.done ? <Icon name="check" size={14} /> : n + 1}</span>
+          <div className="grow">
+            <b>{x.done ? x.title : x.key === 'moh' ? 'Notify MOH' : x.key === 'rca' ? 'Submit the final RCA' : 'Escalate to the Head of Nursing'}</b>
+            <span className="small muted">{x.done || x.todo}</span>
+          </div>
+          {x.action && <button className="btn sm primary" onClick={() => onStep(x.key as 'escalate' | 'moh' | 'rca')}>{x.action}</button>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function EscalateSheet({ i, onClose }: { i: Incident; onClose: () => void }) {
+  const { s, act } = useApp()
+  const r = residentOf(s, i.rid)!
+  const hon = s.staff.find((x) => x.role === 'HON')
+  const told = [i.told.family && 'family told', i.told.doctor && 'doctor told'].filter(Boolean).join(', ')
+  const stop = (x: string) => x.trim().replace(/\.*$/, '.')
+  const at = when(i.t, s.day).replace(/^(Yesterday|Tomorrow)/, (m) => m.toLowerCase())
+  const [note, setNote] = useState(`${typeLabel(i.type)}, ${harmOf(i.harm).label.toLowerCase()}, ${at}. ${stop(i.what)} Injury: ${stop(i.injury)} ${i.action ? stop(i.action) : ''}${told ? ` ${told[0].toUpperCase() + told.slice(1)}.` : ''}`)
+  return (
+    <Sheet title="Escalate to the Head of Nursing" sub={`${typeLabel(i.type)} · ${fullName(r)}`} icon="shield" tone="hi" onClose={onClose} wide
+      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={!note.trim()} onClick={async () => {
+        const res = await act('incident.escalate', { id: i.id, note }, { success: 'Escalated.' })
+        if (res.ok) onClose()
+      }}>Send to {hon?.short ?? 'Head of Nursing'}</button></>}>
+      <Banner tone="info" title="The 72-hour MOH clock starts now">{hon?.name ?? 'The Head of Nursing'} reviews the report, signs off and submits the notification to MOH. The final RCA is due within {RCA_DAYS} days.</Banner>
+      <div className="field">
+        <label htmlFor="esc-note">Preliminary report</label>
+        <textarea id="esc-note" className="textarea" style={{ minHeight: 150 }} value={note} onChange={(e) => setNote(e.target.value)} />
+        <span className="tiny muted">Drafted from the incident record. Check it and add anything the Head of Nursing needs to know.</span>
+      </div>
+    </Sheet>
+  )
+}
+
+function MohSheet({ i, onClose }: { i: Incident; onClose: () => void }) {
+  const { s, act } = useApp()
+  const r = residentOf(s, i.rid)!
+  const [decision, setDecision] = useState<'notified' | 'not-reportable'>('notified')
+  const [ref, setRef] = useState('')
+  const [reason, setReason] = useState('')
+  const ok = decision === 'notified' ? ref.trim() : reason.trim()
+  return (
+    <Sheet title="MOH notification" sub={`${typeLabel(i.type)} · ${fullName(r)}`} icon="shield" tone="hi" onClose={onClose}
+      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={!ok} onClick={async () => {
+        const res = await act('incident.moh', { id: i.id, decision, ref, reason }, { success: decision === 'notified' ? 'MOH notification recorded.' : 'Decision recorded.' })
+        if (res.ok) onClose()
+      }}>Sign off</button></>}>
+      <p className="small">Submit the preliminary notification on FormSG, then record the reference here. Your sign-off is kept in the audit trail.</p>
+      <div className="field">
+        <span className="label">Decision</span>
+        <Choice label="Decision" value={decision} onChange={setDecision} options={[
+          { value: 'notified', label: 'Notified MOH' },
+          ...(i.type === 'abuse' ? [] : [{ value: 'not-reportable' as const, label: 'Not reportable' }]),
+        ]} />
+      </div>
+      {decision === 'notified' ? (
+        <div className="field">
+          <label htmlFor="moh-ref">FormSG submission reference</label>
+          <input id="moh-ref" className="input" value={ref} onChange={(e) => setRef(e.target.value)} placeholder="e.g. 6721a0c3e4b0" />
+        </div>
+      ) : (
+        <div className="field">
+          <label htmlFor="moh-why">Why it is not reportable</label>
+          <textarea id="moh-why" className="textarea" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Laceration sutured at A&E, CT head clear, no lasting harm. Below the SRE threshold of the home's risk matrix." />
+        </div>
+      )}
+    </Sheet>
+  )
+}
+
+function RcaSheet({ i, onClose }: { i: Incident; onClose: () => void }) {
+  const { s, act } = useApp()
+  const r = residentOf(s, i.rid)!
+  const [ref, setRef] = useState('')
+  const [summary, setSummary] = useState(i.review ? `${i.review.findings}${i.review.actions ? ` Actions: ${i.review.actions}` : ''}` : '')
+  return (
+    <Sheet title="Final RCA report" sub={`${typeLabel(i.type)} · ${fullName(r)}`} icon="shield" tone="hi" onClose={onClose} wide
+      footer={<><button className="btn" onClick={onClose}>Cancel</button><button className="btn primary" disabled={!ref.trim() || !summary.trim()} onClick={async () => {
+        const res = await act('incident.rca', { id: i.id, ref, summary }, { success: 'RCA recorded.' })
+        if (res.ok) onClose()
+      }}>Record submission</button></>}>
+      <div className="field">
+        <label htmlFor="rca-ref">Submission reference</label>
+        <input id="rca-ref" className="input" value={ref} onChange={(e) => setRef(e.target.value)} />
+      </div>
+      <div className="field">
+        <label htmlFor="rca-sum">Root causes and actions</label>
+        <textarea id="rca-sum" className="textarea" style={{ minHeight: 130 }} value={summary} onChange={(e) => setSummary(e.target.value)} />
+      </div>
     </Sheet>
   )
 }

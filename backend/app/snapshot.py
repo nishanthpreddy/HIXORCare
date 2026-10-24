@@ -117,6 +117,8 @@ def build(db: Session, clk: Clock, ward_id: str) -> dict:
             **({"review": {**i.review, "t": T(i.review_at), "by": i.review_by}} if i.review else {}),
             **({"closed": {"t": T(i.closed_at), "by": i.closed_by, "summary": i.close_summary}} if i.closed_at else {}),
             **({"mohDue": T(i.moh_due)} if i.moh_due else {}),
+            **({"rcaDue": T(i.rca_due)} if i.rca_due else {}),
+            **{k: {**{x: y for x, y in v.items() if x != "at"}, "t": T(datetime.fromisoformat(v["at"]))} for k, v in (("escalated", i.escalated), ("moh", i.moh), ("rca", i.rca)) if v},
         } for i in db.scalars(select(m.Incident).where(m.Incident.resident_id.in_(rids)).order_by(m.Incident.at.desc()))],
         "audit": [{"seq": e.seq, "t": T(e.at), "by": e.by_id, "action": e.action, "rid": e.resident_id, "detail": e.detail, "hash": e.hash[:8]}
                   for e in db.scalars(select(m.AuditEntry).order_by(m.AuditEntry.seq.desc()).limit(AUDIT_LIMIT))],

@@ -178,6 +178,25 @@ NEURO_SCHEDULE = [15, 30, 45, 60, 120, 240, 480, 720, 1440]
 OBS_SCHEDULE = [60, 240, 1440]
 
 
+MOH_NOTIFY_MIN = 72 * 60
+RCA_DAYS = 30
+
+
+def must_escalate(kind: str, harm: int) -> bool:
+    """Abuse allegations and moderate or severe harm go to the Head of Nursing, who decides on the MOH notification."""
+    return kind == "abuse" or harm <= 2
+
+
+def moh_stage(i) -> str:
+    if not i.escalated:
+        return "escalate" if must_escalate(i.type, i.harm) else "none"
+    if not i.moh:
+        return "notify"
+    if i.moh["decision"] == "notified" and not i.rca:
+        return "rca"
+    return "done"
+
+
 def on_blood_thinner(orders) -> bool:
     return any(not o.stopped_at and not o.prn and ({"anticoagulant", "antiplatelet"} & set(o.classes)) for o in orders)
 

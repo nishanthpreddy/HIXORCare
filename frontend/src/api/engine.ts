@@ -6,7 +6,7 @@ import {
   ASSESSMENTS, ESCALATION, allergyClash, awaitingVerification, isRn, rnOnly, band, canGiveMeds, checkAdvice, findAdmin, fullName, needsWitness,
   news2, news2Risk, prnStatus, residentOf, verifyScan, type VitalsInput,
 } from '../domain/clinical'
-import { closeBlockers, harmOf, needsNeuro, neuroChanged, onBloodThinner, postFallTasks, typeLabel } from '../domain/incidents'
+import { closeBlockers, harmOf, MOH_NOTIFY_MIN, mohStage, needsNeuro, neuroChanged, onBloodThinner, postFallTasks, RCA_DAYS, typeLabel } from '../domain/incidents'
 import type { ActionResult, Alert, HarmLevel, Incident, Neuro, Role, Snapshot, Staff, Task, Ward } from '../domain/types'
 
 export const DEMO_PIN = '1234'
@@ -333,7 +333,7 @@ const ACTIONS: Record<string, { roles: Role[] | 'any'; run: Handler }> = {
   },
 
   'alert.ack': {
-    roles: ['RN', 'EN', 'NM'],
+    roles: ['RN', 'EN', 'NM', 'HON'],
     run: (st, me, b) => {
       const a = st.snap.alerts.find((x) => x.id === b.id)
       if (!a) return fail('invalid', 'Alert not found.')
@@ -344,7 +344,7 @@ const ACTIONS: Record<string, { roles: Role[] | 'any'; run: Handler }> = {
   },
 
   'alert.resolve': {
-    roles: ['RN', 'NM'],
+    roles: ['RN', 'NM', 'HON'],
     run: (st, me, b) => {
       const a = st.snap.alerts.find((x) => x.id === b.id)
       if (!a) return fail('invalid', 'Alert not found.')
@@ -367,7 +367,7 @@ const ACTIONS: Record<string, { roles: Role[] | 'any'; run: Handler }> = {
   },
 
   'incident.report': {
-    roles: ['RN', 'EN', 'CA', 'NM'],
+    roles: ['RN', 'EN', 'CA', 'NM', 'HON'],
     run: (st, me, b) => {
       const s = st.snap
       const r = residentOf(s, b.rid)
@@ -386,7 +386,8 @@ const ACTIONS: Record<string, { roles: Role[] | 'any'; run: Handler }> = {
       if (b.doctorTold) told.doctor = { t: s.now, by: me.id, who: 'Visiting doctor', how: 'Told when reporting' }
       const inc: Incident = {
         id: uid('inc'), rid: r.id, type: b.type, t, reportedT: s.now, by: me.id, where: b.where ?? '', what: b.what.trim(), injury: b.injury ?? 'None',
-        harm: +b.harm as HarmLevel, action: b.action ?? '', fall, told, status: 'open', mohDue: b.type === 'abuse' ? s.now + 72 * 60 : undefined,
+        harm: +b.harm as HarmLevel, action: b.action ?? '', fall, told, status: 'open',
+        ...(b.type === 'abuse' ? { mohDue: s.now + MOH_NOTIFY_MIN, rcaDue: s.now + RCA_DAYS * 1440 } : {}),
       }
       s.incidents.unshift(inc)
       if (fall) {
@@ -407,7 +408,7 @@ const ACTIONS: Record<string, { roles: Role[] | 'any'; run: Handler }> = {
   },
 
   'incident.tell': {
-    roles: ['RN', 'EN', 'NM'],
+    roles: ['RN', 'EN', 'NM', 'HON'],
     run: (st, me, b) => {
       const i = st.snap.incidents.find((x) => x.id === b.id)
       if (!i) return fail('invalid', 'Incident not found.')
@@ -420,8 +421,62 @@ const ACTIONS: Record<string, { roles: Role[] | 'any'; run: Handler }> = {
     },
   },
 
+  'incident.escalate': {
+    roles: ['RN', 'NM'],
+    run: (st, me, b) => {
+      const s = st.snap
+      const i = s.incidents.find((x) => x.id === b.id)
+      if (!i) return fail('invalid', 'Incident not found.')
+      if (i.status === 'closed') return fail('invalid', 'Closed incidents can no longer be changed.')
+      if (i.escalated) return fail('invalid', 'Already escalated to the Head of Nursing.')
+      if (!b.note?.trim()) return fail('invalid', 'Write the preliminary report for the Head of Nursing.')
+      i.escalated = { t: s.now, by: me.id, note: b.note.trim() }
+      // The MOH clocks run from when management became aware.
+      i.mohDue ??= s.now + MOH_NOTIFY_MIN
+      i.rcaDue ??= i.mohDue - MOH_NOTIFY_MIN + RCA_DAYS * 1440
+      const hon = s.staff.find((x) => x.role === 'HON')
+      appendAudit(st, me.id, 'Incident escalated to Head of Nursing', i.rid, `${typeLabel(i.type)}, ${harmOf(i.harm).label.toLowerCase()}. ${i.escalated.note}`)
+      return { ok: true, message: `${hon?.name ?? 'The Head of Nursing'} has been told. MOH must be notified within 72 hours.` }
+    },
+  },
+
+  'incident.moh': {
+    roles: ['HON'],
+    run: (st, me, b) => {
+      const s = st.snap
+      const i = s.incidents.find((x) => x.id === b.id)
+      if (!i) return fail('invalid', 'Incident not found.')
+      if (mohStage(i) !== 'notify') return fail('invalid', i.escalated ? 'The MOH decision is already recorded.' : 'The nurse manager has not escalated this incident yet.')
+      if (b.decision === 'notified') {
+        if (!b.ref?.trim()) return fail('invalid', 'Enter the FormSG submission reference.')
+        i.moh = { t: s.now, by: me.id, decision: 'notified', ref: b.ref.trim() }
+        appendAudit(st, me.id, 'MOH notified', i.rid, `${typeLabel(i.type)}. Preliminary notification submitted, reference ${i.moh.ref}. Final RCA due in ${RCA_DAYS} days.`)
+      } else if (b.decision === 'not-reportable') {
+        if (i.type === 'abuse') return fail('blocked', 'Abuse allegations must be notified', 'Every abuse allegation is notified to MOH within 72 hours (LC section 21).')
+        if (!b.reason?.trim()) return fail('invalid', 'Record why it is not reportable.')
+        i.moh = { t: s.now, by: me.id, decision: 'not-reportable', reason: b.reason.trim() }
+        appendAudit(st, me.id, 'MOH notification not required', i.rid, `${typeLabel(i.type)}. ${i.moh.reason}`)
+      } else return fail('invalid', 'Choose whether MOH was notified.')
+      return { ok: true }
+    },
+  },
+
+  'incident.rca': {
+    roles: ['HON'],
+    run: (st, me, b) => {
+      const s = st.snap
+      const i = s.incidents.find((x) => x.id === b.id)
+      if (!i) return fail('invalid', 'Incident not found.')
+      if (mohStage(i) !== 'rca') return fail('invalid', 'There is no RCA due for this incident.')
+      if (!b.ref?.trim() || !b.summary?.trim()) return fail('invalid', 'Enter the submission reference and the RCA findings.')
+      i.rca = { t: s.now, by: me.id, ref: b.ref.trim(), summary: b.summary.trim() }
+      appendAudit(st, me.id, 'RCA submitted to MOH', i.rid, `${typeLabel(i.type)}. Reference ${i.rca.ref}. ${i.rca.summary}`)
+      return { ok: true }
+    },
+  },
+
   'incident.review': {
-    roles: ['NM'],
+    roles: ['NM', 'HON'],
     run: (st, me, b) => {
       const i = st.snap.incidents.find((x) => x.id === b.id)
       if (!i) return fail('invalid', 'Incident not found.')
@@ -435,12 +490,13 @@ const ACTIONS: Record<string, { roles: Role[] | 'any'; run: Handler }> = {
   },
 
   'incident.close': {
-    roles: ['NM'],
+    roles: ['NM', 'HON'],
     run: (st, me, b) => {
       const s = st.snap
       const i = s.incidents.find((x) => x.id === b.id)
       if (!i) return fail('invalid', 'Incident not found.')
       if (i.status === 'closed') return fail('invalid', 'Already closed.')
+      if (i.escalated && me.role !== 'HON') return fail('forbidden', 'The Head of Nursing closes this incident', 'Incidents escalated for MOH reporting are signed off by the Head of Nursing.')
       const blockers = closeBlockers(s, i)
       if (blockers.length) return fail('blocked', 'Not ready to close', blockers.join('. ') + '.')
       if (!b.summary?.trim()) return fail('invalid', 'Write a short closing summary.')
@@ -471,7 +527,7 @@ const ACTIONS: Record<string, { roles: Role[] | 'any'; run: Handler }> = {
   },
 
   'note.add': {
-    roles: ['RN', 'EN', 'CA', 'NM', 'DR'],
+    roles: ['RN', 'EN', 'CA', 'NM', 'HON', 'DR'],
     run: (st, me, b) => {
       if (!b.text?.trim()) return fail('invalid', 'Write the note first.')
       st.snap.notes.push({ id: uid('n'), rid: b.rid, t: st.snap.now, by: me.id, kind: b.kind || 'Nursing', text: b.text.trim() })

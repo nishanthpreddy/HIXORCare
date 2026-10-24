@@ -20,7 +20,7 @@ from .audit import append_audit
 from .auth import check_pin
 from .db import Clock
 from .rules import (
-    ASSESSMENTS, ESCALATION, HARM, INCIDENT_TYPES, allergy_clash, can_give_meds, cd_units, check_advice, is_rn, needs_neuro, needs_witness,
+    ASSESSMENTS, ESCALATION, HARM, INCIDENT_TYPES, MOH_NOTIFY_MIN, RCA_DAYS, moh_stage, allergy_clash, can_give_meds, cd_units, check_advice, is_rn, needs_neuro, needs_witness,
     neuro_changed, news2, news2_risk, on_blood_thinner, post_fall_tasks, rn_only, score_assessment, verify_scan, wristband,
 )
 
@@ -346,7 +346,7 @@ def vitals_record(ctx: Ctx, b: dict) -> None:
     ctx.data = {"score": score, "risk": risk, "alertId": alert_id}
 
 
-@action("alert.ack", {"RN", "EN", "NM"})
+@action("alert.ack", {"RN", "EN", "NM", "HON"})
 def alert_ack(ctx: Ctx, b: dict) -> None:
     a = ctx.db.get(m.Alert, b.get("id"))
     if not a:
@@ -355,7 +355,7 @@ def alert_ack(ctx: Ctx, b: dict) -> None:
     ctx.audit("Alert acknowledged", a.resident_id, a.title)
 
 
-@action("alert.resolve", {"RN", "NM"})
+@action("alert.resolve", {"RN", "NM", "HON"})
 def alert_resolve(ctx: Ctx, b: dict) -> None:
     a = ctx.db.get(m.Alert, b.get("id"))
     if not a:
@@ -397,7 +397,7 @@ def task_complete(ctx: Ctx, b: dict) -> None:
     ctx.audit("Care task done", t.resident_id, f"{t.text}.{(' ' + b['note']) if b.get('note') else ''}")
 
 
-@action("note.add", {"RN", "EN", "CA", "NM", "DR"})
+@action("note.add", {"RN", "EN", "CA", "NM", "HON", "DR"})
 def note_add(ctx: Ctx, b: dict) -> None:
     text_ = (b.get("text") or "").strip()
     if not text_:
@@ -523,6 +523,13 @@ def incident(ctx: Ctx, iid: str | None) -> m.Incident:
 
 def close_blockers(ctx: Ctx, i: m.Incident) -> list[str]:
     out = []
+    stage = moh_stage(i)
+    if stage == "escalate":
+        out.append("Escalate to the Head of Nursing")
+    if stage == "notify":
+        out.append("Head of Nursing to decide on the MOH notification")
+    if stage == "rca":
+        out.append("Head of Nursing to submit the final RCA to MOH")
     if i.harm <= 4 and "family" not in (i.told or {}):
         out.append("Record that the family has been told")
     if i.harm <= 4 and "doctor" not in (i.told or {}):
@@ -537,12 +544,10 @@ def close_blockers(ctx: Ctx, i: m.Incident) -> list[str]:
                                                           m.Task.done_at.is_(None))).all())
         if left:
             out.append(f"Finish post-fall observations ({left} left)")
-    if i.type == "abuse":
-        out.append("Abuse allegations are closed from a safeguarding case")
     return out
 
 
-@action("incident.report", {"RN", "EN", "CA", "NM"})
+@action("incident.report", {"RN", "EN", "CA", "NM", "HON"})
 def incident_report(ctx: Ctx, b: dict) -> None:
     r = ctx.db.get(m.Resident, b.get("rid") or "")
     if not r:
@@ -573,7 +578,8 @@ def incident_report(ctx: Ctx, b: dict) -> None:
         told["doctor"] = {"at": ctx.now.isoformat(), "by": ctx.me.id, "who": "Visiting doctor", "how": "Told when reporting"}
     i = m.Incident(id=uid("inc"), resident_id=r.id, type=kind, at=ctx.clk.dt(t), reported_at=ctx.now, by_id=ctx.me.id, place=b.get("where") or "", what=what,
                    injury=b.get("injury") or "None", harm=harm, action=b.get("action") or "", fall=fall, told=told, status="open",
-                   moh_due=ctx.clk.dt(ctx.clk.now + 72 * 60) if kind == "abuse" else None)
+                   moh_due=ctx.clk.dt(ctx.clk.now + MOH_NOTIFY_MIN) if kind == "abuse" else None,
+                   rca_due=ctx.clk.dt(ctx.clk.now + RCA_DAYS * 1440) if kind == "abuse" else None)
     ctx.db.add(i)
     if fall:
         for due, text_ in post_fall_tasks(t, fall["neuroObs"]):
@@ -591,7 +597,7 @@ def incident_report(ctx: Ctx, b: dict) -> None:
         ctx.message = "Neuro observations are scheduled for the next 24 hours." if fall["neuroObs"] else "Post-fall observations are scheduled."
 
 
-@action("incident.tell", {"RN", "EN", "NM"})
+@action("incident.tell", {"RN", "EN", "NM", "HON"})
 def incident_tell(ctx: Ctx, b: dict) -> None:
     i = incident(ctx, b.get("id"))
     if i.status == "closed":
@@ -606,7 +612,7 @@ def incident_tell(ctx: Ctx, b: dict) -> None:
     ctx.audit("Family told of incident" if party == "family" else "Doctor told of incident", i.resident_id, f"{INCIDENT_TYPES[i.type]}: {who}, {how.lower()}.")
 
 
-@action("incident.review", {"NM"})
+@action("incident.review", {"NM", "HON"})
 def incident_review(ctx: Ctx, b: dict) -> None:
     i = incident(ctx, b.get("id"))
     if i.status == "closed":
@@ -620,11 +626,70 @@ def incident_review(ctx: Ctx, b: dict) -> None:
               f"{('Factors: ' + ', '.join(factors) + '. ') if factors else ''}{findings}")
 
 
-@action("incident.close", {"NM"})
+@action("incident.escalate", {"RN", "NM"})
+def incident_escalate(ctx: Ctx, b: dict) -> None:
+    i = incident(ctx, b.get("id"))
+    if i.status == "closed":
+        raise ActionError("invalid", "Closed incidents can no longer be changed.")
+    if i.escalated:
+        raise ActionError("invalid", "Already escalated to the Head of Nursing.")
+    note = (b.get("note") or "").strip()
+    if not note:
+        raise ActionError("invalid", "Write the preliminary report for the Head of Nursing.")
+    i.escalated = {"at": ctx.now.isoformat(), "by": ctx.me.id, "note": note}
+    # The MOH clocks run from when management became aware.
+    if not i.moh_due:
+        i.moh_due = ctx.now + timedelta(minutes=MOH_NOTIFY_MIN)
+    if not i.rca_due:
+        i.rca_due = i.moh_due - timedelta(minutes=MOH_NOTIFY_MIN) + timedelta(days=RCA_DAYS)
+    hon = ctx.db.scalar(select(m.Staff).where(m.Staff.role == "HON"))
+    ctx.audit("Incident escalated to Head of Nursing", i.resident_id, f"{INCIDENT_TYPES[i.type]}, {HARM[i.harm].lower()}. {note}")
+    ctx.message = f"{hon.name if hon else 'The Head of Nursing'} has been told. MOH must be notified within 72 hours."
+
+
+@action("incident.moh", {"HON"})
+def incident_moh(ctx: Ctx, b: dict) -> None:
+    i = incident(ctx, b.get("id"))
+    if moh_stage(i) != "notify":
+        raise ActionError("invalid", "The MOH decision is already recorded." if i.escalated else "The nurse manager has not escalated this incident yet.")
+    decision = b.get("decision")
+    if decision == "notified":
+        ref = (b.get("ref") or "").strip()
+        if not ref:
+            raise ActionError("invalid", "Enter the FormSG submission reference.")
+        i.moh = {"at": ctx.now.isoformat(), "by": ctx.me.id, "decision": decision, "ref": ref}
+        ctx.audit("MOH notified", i.resident_id, f"{INCIDENT_TYPES[i.type]}. Preliminary notification submitted, reference {ref}. Final RCA due in {RCA_DAYS} days.")
+    elif decision == "not-reportable":
+        if i.type == "abuse":
+            raise ActionError("blocked", "Abuse allegations must be notified", "Every abuse allegation is notified to MOH within 72 hours (LC section 21).")
+        reason = (b.get("reason") or "").strip()
+        if not reason:
+            raise ActionError("invalid", "Record why it is not reportable.")
+        i.moh = {"at": ctx.now.isoformat(), "by": ctx.me.id, "decision": decision, "reason": reason}
+        ctx.audit("MOH notification not required", i.resident_id, f"{INCIDENT_TYPES[i.type]}. {reason}")
+    else:
+        raise ActionError("invalid", "Choose whether MOH was notified.")
+
+
+@action("incident.rca", {"HON"})
+def incident_rca(ctx: Ctx, b: dict) -> None:
+    i = incident(ctx, b.get("id"))
+    if moh_stage(i) != "rca":
+        raise ActionError("invalid", "There is no RCA due for this incident.")
+    ref, summary = (b.get("ref") or "").strip(), (b.get("summary") or "").strip()
+    if not ref or not summary:
+        raise ActionError("invalid", "Enter the submission reference and the RCA findings.")
+    i.rca = {"at": ctx.now.isoformat(), "by": ctx.me.id, "ref": ref, "summary": summary}
+    ctx.audit("RCA submitted to MOH", i.resident_id, f"{INCIDENT_TYPES[i.type]}. Reference {ref}. {summary}")
+
+
+@action("incident.close", {"NM", "HON"})
 def incident_close(ctx: Ctx, b: dict) -> None:
     i = incident(ctx, b.get("id"))
     if i.status == "closed":
         raise ActionError("invalid", "Already closed.")
+    if i.escalated and ctx.me.role != "HON":
+        raise ActionError("forbidden", "The Head of Nursing closes this incident", "Incidents escalated for MOH reporting are signed off by the Head of Nursing.")
     blockers = close_blockers(ctx, i)
     if blockers:
         raise ActionError("blocked", "Not ready to close", ". ".join(blockers) + ".")

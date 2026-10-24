@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AppProvider, useApp, type View } from './store'
 import { Icon, Logo } from './ui/Icon'
 import { Avatar, PinPad } from './ui/kit'
-import { clock, dateOf, residentOf } from './domain/clinical'
+import { clock, dateOf, isManager, residentOf } from './domain/clinical'
 import { activeAlerts, roundProgress, shiftNow } from './domain/selectors'
 import { currentSlot } from './domain/clinical'
 import type { Staff } from './domain/types'
@@ -42,7 +42,7 @@ function Gate() {
 }
 
 const NAV: { view: View; label: string; icon: string; hideSm?: boolean; roles?: string[] }[] = [
-  { view: 'manager', label: 'Overview', icon: 'chart', roles: ['NM'] },
+  { view: 'manager', label: 'Overview', icon: 'chart', roles: ['NM', 'HON'] },
   { view: 'today', label: 'Today', icon: 'today' },
   { view: 'round', label: 'Med round', icon: 'pill' },
   { view: 'residents', label: 'Residents', icon: 'residents' },
@@ -57,7 +57,7 @@ const IDLE_LOCK_MS = 2 * 60_000
 function Shell() {
   const { route: asked, go, s, lock, me } = useApp()
   // The manager overview is for nurse managers; anyone else lands on Today.
-  const route = asked.view === 'manager' && me?.role !== 'NM' ? { view: 'today' as View } : asked
+  const route = asked.view === 'manager' && !isManager(me?.role) ? { view: 'today' as View } : asked
   useEffect(() => {
     let t = setTimeout(lock, IDLE_LOCK_MS)
     const bump = () => { clearTimeout(t); t = setTimeout(lock, IDLE_LOCK_MS) }
@@ -120,9 +120,9 @@ const TITLES: Record<View, string> = {
 
 function TopBar() {
   const { s, route: asked, me, lock, go, wards, setWard } = useApp()
-  const route = asked.view === 'manager' && me?.role !== 'NM' ? { ...asked, view: 'today' as View } : asked
+  const route = asked.view === 'manager' && !isManager(me?.role) ? { ...asked, view: 'today' as View } : asked
   const [menu, setMenu] = useState(false)
-  const mine = me?.role === 'NM' ? wards.filter((w) => me.wards.includes(w.id)) : []
+  const mine = me && isManager(me.role) ? wards.filter((w) => me.wards.includes(w.id)) : []
   const shift = shiftNow(s.now)
   const date = dateOf(s.day).toLocaleDateString('en-SG', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })
   const r = route.view === 'resident' && route.rid ? residentOf(s, route.rid) : null
@@ -190,7 +190,7 @@ function Lock() {
   const [who, setWho] = useState<Staff | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const shift = shiftNow(s.now)
-  const onShift = s.staff.filter((x) => x.shift === shift.id || x.role === 'NM')
+  const onShift = s.staff.filter((x) => x.shift === shift.id || isManager(x.role))
   const others = s.staff.filter((x) => !onShift.includes(x) && ['RN', 'EN', 'CA'].includes(x.role))
   const slot = currentSlot(s)
   const prog = roundProgress(s, slot)
@@ -253,7 +253,7 @@ function Lock() {
               onDone={async (pin) => {
                 const res = await signIn(who.id, pin)
                 if (!res.ok) setErr(res.message)
-                else if (who.role === 'NM') go({ view: 'manager' })
+                else if (isManager(who.role)) go({ view: 'manager' })
               }}
             />
             <button className="btn ghost" onClick={() => setWho(null)}><Icon name="left" />Not you?</button>
@@ -265,11 +265,15 @@ function Lock() {
 }
 
 function WhoCard({ x, onPick }: { x: Staff; onPick: () => void }) {
+  const { wards } = useApp()
+  // Nurses rostered on more than one ward can sign in on any of them.
+  const also = !isManager(x.role) && x.wards.length > 1 ? wards.filter((w) => x.wards.includes(w.id)).map((w) => w.code).join(' and ') : null
   return (
     <button className="who-card" onClick={onPick}>
       <Avatar id={x.id} name={x.name} size={52} />
       <b>{x.name}</b>
       <span>{x.title}</span>
+      {also && <span className="tiny" style={{ color: 'var(--accent)', fontWeight: 650 }}>Wards {also}</span>}
     </button>
   )
 }

@@ -282,4 +282,6 @@ const INJECTABLE = ['Subcutaneous', 'Intramuscular', 'Intravenous']
 /** MOH LC §14: ENs may not prepare injectables or controlled drugs. */
 export const rnOnly = (o: Order) => !!o.cd || INJECTABLE.includes(o.route)
 export const isRn = (role: string) => role === 'RN' || role === 'NM'
+/** Nurse managers and the Head of Nursing see the overview and review incidents. */
+export const isManager = (role?: string) => role === 'NM' || role === 'HON'
 export const awaitingVerification = (o: Order) => !!o.transcribed && !o.transcribed.verifiedBy

@@ -138,7 +138,9 @@ def load_ward(db: Session, raw: dict, clk: Clock) -> None:
                           what=i["what"], injury=i["injury"], harm=i["harm"], action=i["action"], fall=i.get("fall"), told=told(i["told"]), status=i["status"],
                           review={k: rv[k] for k in ("factors", "findings", "actions")} if rv else None, review_by=rv["by"] if rv else None,
                           review_at=dt(rv["t"]) if rv else None, closed_by=cl["by"] if cl else None, closed_at=dt(cl["t"]) if cl else None,
-                          close_summary=cl["summary"] if cl else None, moh_due=dt(i["mohDue"]) if i.get("mohDue") is not None else None))
+                          close_summary=cl["summary"] if cl else None, moh_due=dt(i["mohDue"]) if i.get("mohDue") is not None else None,
+                          rca_due=dt(i["rcaDue"]) if i.get("rcaDue") is not None else None,
+                          **{k: {**{x: y for x, y in i[k].items() if x != "t"}, "at": dt(i[k]["t"]).isoformat()} for k in ("escalated", "moh", "rca") if i.get(k)}))
     for ho in raw["handovers"]:
         db.add(m.Handover(id=ho["id"], shift=ho["shift"], at=dt(ho["t"]), from_id=ho["from"], to_id=ho["to"], summary=ho["summary"]))
 

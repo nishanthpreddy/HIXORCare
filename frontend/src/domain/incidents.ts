@@ -51,9 +51,27 @@ export function postFallTasks(i: Pick<Incident, 'fall' | 't'>) {
   return plan.map((m, n) => ({ due: i.t + m, text: `Post-fall ${neuro ? 'neuro obs' : 'obs'} ${n + 1} of ${plan.length}` }))
 }
 
-/** What still stops a nurse manager from closing the incident. */
+export const MOH_NOTIFY_MIN = 72 * 60
+export const RCA_DAYS = 30
+
+/** Abuse allegations and incidents with moderate or severe harm go to the Head of Nursing, who decides on the MOH notification. */
+export const mustEscalate = (i: Pick<Incident, 'type' | 'harm'>) => i.type === 'abuse' || i.harm <= 2
+
+/** Where the MOH reporting chain stands: nurse manager escalates, Head of Nursing notifies MOH, then submits the RCA. */
+export function mohStage(i: Incident): 'none' | 'escalate' | 'notify' | 'rca' | 'done' {
+  if (!i.escalated) return mustEscalate(i) ? 'escalate' : 'none'
+  if (!i.moh) return 'notify'
+  if (i.moh.decision === 'notified' && !i.rca) return 'rca'
+  return 'done'
+}
+
+/** What still stops the incident being closed. */
 export function closeBlockers(s: Snapshot, i: Incident): string[] {
   const out: string[] = []
+  const stage = mohStage(i)
+  if (stage === 'escalate') out.push('Escalate to the Head of Nursing')
+  if (stage === 'notify') out.push('Head of Nursing to decide on the MOH notification')
+  if (stage === 'rca') out.push('Head of Nursing to submit the final RCA to MOH')
   if (i.harm <= 4 && !i.told.family) out.push('Record that the family has been told')
   if (i.harm <= 4 && !i.told.doctor) out.push('Record that the doctor has been told')
   if (!i.review) out.push(i.type === 'fall' ? 'Complete the post-fall analysis' : 'Record the review')
@@ -62,7 +80,6 @@ export function closeBlockers(s: Snapshot, i: Incident): string[] {
     const left = s.tasks.filter((t) => t.rid === i.rid && t.text.startsWith('Post-fall') && t.due >= i.t && !t.done).length
     if (left) out.push(`Finish post-fall observations (${left} left)`)
   }
-  if (i.type === 'abuse') out.push('Abuse allegations are closed from a safeguarding case')
   return out
 }
 

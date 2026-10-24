@@ -75,6 +75,10 @@ Tests: `cd backend && DATABASE_URL=postgresql+psycopg://hixor@127.0.0.1:5433/hix
    medicines awaiting verification, the team on shift, controlled drug balances, seven days of medication timeliness,
    patterns to review (repeated refusals, held doses, PRN use, antipsychotic reviews), a clinical risk register for every
    resident, and assessments and care plan reviews that are due. On Ward 3A, Mr Teo's fall is ready to close.
+11. **MOH reporting**: on Ward 3A, Mdm Chan fell last night on apixaban and needed sutures at A&E (moderate harm). Mary
+   escalates the preliminary report to the Head of Nursing, which starts the 72-hour MOH clock. Sign in as Catherine Wee
+   (Head of Nursing): she reviews it, submits the notification on FormSG and records the reference, then submits the final
+   RCA within 30 days. Only she can close an escalated incident.
 
 ## Safety rules implemented
 
@@ -92,6 +96,10 @@ Tests: `cd backend && DATABASE_URL=postgresql+psycopg://hixor@127.0.0.1:5433/hix
   unwitnessed, the head may have been hit, or the resident is on a blood thinner. Only a nurse manager reviews and closes,
   and closing is blocked until family and doctor are told, the post-fall analysis is done, falls risk is reassessed and
   the observations are finished.
+- MOH reporting chain: abuse allegations and moderate or severe harm must be escalated by the nurse manager or charge
+  nurse to the Head of Nursing, who signs off the MOH notification (72 hours) and the final RCA (30 calendar days).
+  Abuse allegations cannot be marked as not reportable.
+- Staff can be rostered on more than one ward and sign in on any of them.
 
 ## Compared with the systems in use today
 

@@ -479,6 +479,13 @@ p { margin: 0; }
 /* ---------- Nurse manager overview ---------- */
 .mgr-kpis { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 14px; }
 .mgr-kpis .stat-card { text-align: left; color: inherit; }
+.moh-steps { border: 1px solid var(--line); border-radius: var(--r-lg, 14px); padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; background: var(--surface-2); }
+.moh-step { display: flex; align-items: flex-start; gap: 12px; }
+.moh-step > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.moh-dot { width: 26px; height: 26px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 13px; font-weight: 750; background: var(--sunken); color: var(--ink-2); }
+.moh-step.done .moh-dot { background: var(--ok); color: #fff; }
+.moh-step.late .moh-dot { background: var(--crit); color: #fff; }
+.moh-step.late .small { color: var(--crit-ink); }
 .ward-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; }
 .ward-card { padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; text-align: left; color: inherit; min-width: 0; }
 button.ward-card { cursor: pointer; transition: border-color .15s, box-shadow .15s; }

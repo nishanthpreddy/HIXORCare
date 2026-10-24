@@ -2536,16 +2536,77 @@
   },
   {
    "rid": "r-chan",
-   "t": 468,
-   "rr": 16,
-   "spo2": 96,
+   "t": -76,
+   "rr": 18,
+   "spo2": 97,
    "o2": false,
-   "sbp": 122,
-   "dbp": 70,
-   "pulse": 76,
+   "sbp": 146,
+   "dbp": 84,
+   "pulse": 92,
    "acvpu": "A",
    "temp": 36.6,
-   "by": "s-joseph"
+   "by": "s-arun",
+   "note": "Just after the fall. Bleeding controlled with pressure.",
+   "neuro": {
+    "gcs": 15,
+    "pupils": "equal and reactive",
+    "limbs": "normal"
+   }
+  },
+  {
+   "rid": "r-chan",
+   "t": -50,
+   "rr": 17,
+   "spo2": 97,
+   "o2": false,
+   "sbp": 140,
+   "dbp": 82,
+   "pulse": 88,
+   "acvpu": "A",
+   "temp": 36.6,
+   "by": "s-arun",
+   "neuro": {
+    "gcs": 15,
+    "pupils": "equal and reactive",
+    "limbs": "normal"
+   }
+  },
+  {
+   "rid": "r-chan",
+   "t": 282,
+   "rr": 16,
+   "spo2": 97,
+   "o2": false,
+   "sbp": 132,
+   "dbp": 78,
+   "pulse": 80,
+   "acvpu": "A",
+   "temp": 36.5,
+   "by": "s-arun",
+   "note": "Back from A&E. Four sutures above the right eyebrow. CT head clear.",
+   "neuro": {
+    "gcs": 15,
+    "pupils": "equal and reactive",
+    "limbs": "normal"
+   }
+  },
+  {
+   "rid": "r-chan",
+   "t": 404,
+   "rr": 16,
+   "spo2": 97,
+   "o2": false,
+   "sbp": 128,
+   "dbp": 76,
+   "pulse": 78,
+   "acvpu": "A",
+   "temp": 36.6,
+   "by": "s-arun",
+   "neuro": {
+    "gcs": 15,
+    "pupils": "equal and reactive",
+    "limbs": "normal"
+   }
   }
  ],
  "glucose": [
@@ -2564,6 +2625,20 @@
   }
  ],
  "alerts": [
+  {
+   "id": "a-3a-5",
+   "rid": "r-chan",
+   "kind": "incident",
+   "severity": "high",
+   "title": "Fall reported: Mei Ling",
+   "detail": "Moderate harm. Unwitnessed fall with a head laceration, on apixaban. Sent to A&E, back at 04:30, CT head clear. Escalate to the Head of Nursing.",
+   "t": -65,
+   "status": "ack",
+   "ackBy": "s-arun",
+   "ackT": -64,
+   "dueT": 4255,
+   "dueLabel": "Manager review"
+  },
   {
    "id": "a-3a-1",
    "rid": "r-yeo",
@@ -2725,6 +2800,116 @@
     "t": -4492,
     "by": "s-daniel"
    }
+  },
+  {
+   "id": "t-3a-cf1",
+   "rid": "r-chan",
+   "text": "Post-fall neuro obs 1 of 9",
+   "due": -65,
+   "category": "obs",
+   "done": {
+    "t": -61,
+    "by": "s-arun"
+   }
+  },
+  {
+   "id": "t-3a-cf2",
+   "rid": "r-chan",
+   "text": "Post-fall neuro obs 2 of 9",
+   "due": -50,
+   "category": "obs",
+   "done": {
+    "t": -46,
+    "by": "s-arun"
+   }
+  },
+  {
+   "id": "t-3a-cf3",
+   "rid": "r-chan",
+   "text": "Post-fall neuro obs 3 of 9",
+   "due": -35,
+   "category": "obs",
+   "done": {
+    "t": -31,
+    "by": "s-arun"
+   }
+  },
+  {
+   "id": "t-3a-cf4",
+   "rid": "r-chan",
+   "text": "Post-fall neuro obs 4 of 9",
+   "due": -20,
+   "category": "obs",
+   "done": {
+    "t": 282,
+    "by": "s-arun",
+    "note": "In A&E at the time. Hospital neuro chart reviewed on return: GCS 15 throughout."
+   }
+  },
+  {
+   "id": "t-3a-cf5",
+   "rid": "r-chan",
+   "text": "Post-fall neuro obs 5 of 9",
+   "due": 40,
+   "category": "obs",
+   "done": {
+    "t": 282,
+    "by": "s-arun",
+    "note": "In A&E at the time. Hospital neuro chart reviewed on return: GCS 15 throughout."
+   }
+  },
+  {
+   "id": "t-3a-cf6",
+   "rid": "r-chan",
+   "text": "Post-fall neuro obs 6 of 9",
+   "due": 160,
+   "category": "obs",
+   "done": {
+    "t": 282,
+    "by": "s-arun",
+    "note": "In A&E at the time. Hospital neuro chart reviewed on return: GCS 15 throughout."
+   }
+  },
+  {
+   "id": "t-3a-cf7",
+   "rid": "r-chan",
+   "text": "Post-fall neuro obs 7 of 9",
+   "due": 400,
+   "category": "obs",
+   "done": {
+    "t": 406,
+    "by": "s-arun"
+   }
+  },
+  {
+   "id": "t-3a-cf8",
+   "rid": "r-chan",
+   "text": "Post-fall neuro obs 8 of 9",
+   "due": 640,
+   "category": "obs"
+  },
+  {
+   "id": "t-3a-cf9",
+   "rid": "r-chan",
+   "text": "Post-fall neuro obs 9 of 9",
+   "due": 1360,
+   "category": "obs"
+  },
+  {
+   "id": "t-3a-cf-pain",
+   "rid": "r-chan",
+   "text": "Reassess pain after the fall",
+   "due": 600,
+   "category": "assessment",
+   "assessment": "abbey"
+  },
+  {
+   "id": "t-3a-cf-morse",
+   "rid": "r-chan",
+   "text": "Reassess falls risk after the fall",
+   "due": 1360,
+   "category": "assessment",
+   "assessment": "morse"
   }
  ],
  "notes": [
@@ -2759,6 +2944,14 @@
    "by": "s-priya",
    "kind": "Nursing",
    "text": "Saw 'children in the room' this morning, not distressed. Hallucinations as usual for him. No change in obs."
+  },
+  {
+   "id": "n-3a-5",
+   "rid": "r-chan",
+   "t": 290,
+   "by": "s-arun",
+   "kind": "Nursing",
+   "text": "Returned from A&E at 04:30 by ambulance. Four sutures, remove in 5 days. CT head clear. Discharge note: continue apixaban, neuro obs for 24 hours. GCS 15, settled. Daughter updated."
   }
  ],
  "assessments": [
@@ -3159,6 +3352,40 @@
  ],
  "incidents": [
   {
+   "id": "inc-3a-5",
+   "rid": "r-chan",
+   "type": "fall",
+   "t": -80,
+   "reportedT": -65,
+   "by": "s-arun",
+   "where": "Bedroom, 3A-09",
+   "what": "Heard a call at 22:40 and found her on the floor beside the bed, face down. Unwitnessed. She had tried to walk to the toilet without her frame.",
+   "injury": "3 cm laceration above the right eyebrow, bleeding. Four sutures at A&E. CT head clear.",
+   "harm": 2,
+   "action": "Pressure on the wound, neuro obs started. Dr Lim phoned: on apixaban, so sent to Ng Teng Fong A&E at 23:05. Returned 04:30 with discharge note, neuro obs restarted.",
+   "fall": {
+    "witnessed": false,
+    "headStrike": "yes",
+    "bloodThinner": true,
+    "neuroObs": true
+   },
+   "told": {
+    "doctor": {
+     "t": -70,
+     "by": "s-arun",
+     "who": "Dr Lim Wei Ming",
+     "how": "Phone call"
+    },
+    "family": {
+     "t": -55,
+     "by": "s-arun",
+     "who": "Chan Wing Sum",
+     "how": "Phone call"
+    }
+   },
+   "status": "open"
+  },
+  {
    "id": "inc-3a-1",
    "rid": "r-yeo",
    "type": "behaviour",
@@ -3313,7 +3540,7 @@
    "t": 428,
    "from": "s-arun",
    "to": "s-priya",
-   "summary": "Restless night for Koh Ah Lian, walking 02:00 to 03:30. Tay Geok Hoon refused risperidone again. Ng Siew Eng coughing after drinks, watch."
+   "summary": "Chan Mei Ling fell at 22:40, head laceration, sent to A&E on apixaban; back 04:30 with 4 sutures, CT clear, neuro obs continuing. Koh Ah Lian walking 02:00 to 03:30. Tay Geok Hoon refused risperidone again. Ng Siew Eng coughing after drinks, watch."
   }
  ],
  "audit": [
@@ -3330,6 +3557,13 @@
    "action": "Post-fall analysis recorded",
    "rid": "r-teo",
    "detail": "Factors: Walking aid not in reach, Low blood pressure. Turned quickly at the end of the corridor."
+  },
+  {
+   "t": -65,
+   "by": "s-arun",
+   "action": "Incident reported",
+   "rid": "r-chan",
+   "detail": "Fall, moderate harm. Found face down beside her bed, unwitnessed, head laceration. Neuro observations scheduled for 24 hours."
   },
   {
    "t": 428,

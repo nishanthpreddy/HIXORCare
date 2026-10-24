@@ -1,7 +1,8 @@
 // Shapes shared by the API client, the in-browser demo backend and the views.
 // Times (`t`) are minutes from 00:00 on the snapshot's `day` (Asia/Singapore).
 
-export type Role = 'RN' | 'EN' | 'CA' | 'NM' | 'DR' | 'PH'
+/** HON: Head of Nursing (or Director of Nursing / clinical governance lead), who signs off MOH notifications. */
+export type Role = 'RN' | 'EN' | 'CA' | 'NM' | 'HON' | 'DR' | 'PH'
 
 export interface Staff {
   id: string
@@ -160,8 +161,15 @@ export interface Incident {
   status: 'open' | 'review' | 'closed'
   review?: { t: number; by: string; factors: string[]; findings: string; actions: string }
   closed?: { t: number; by: string; summary: string }
-  /** Abuse allegations: MOH preliminary notification is due within 72 hours of management becoming aware (LC section 21). */
+  /** MOH preliminary notification is due within 72 hours of management becoming aware (LC section 21). */
   mohDue?: number
+  /** The nurse manager or charge nurse passes the preliminary report to the Head of Nursing. */
+  escalated?: { t: number; by: string; note: string }
+  /** The Head of Nursing's executive review: notified MOH (FormSG reference), or decided it is not reportable. */
+  moh?: { t: number; by: string; decision: 'notified' | 'not-reportable'; ref?: string; reason?: string }
+  /** Final root cause analysis report to MOH, due 30 calendar days after management became aware. */
+  rcaDue?: number
+  rca?: { t: number; by: string; ref: string; summary: string }
 }
 
 export interface Glucose { id: string; rid: string; t: number; value: number; by: string; note?: string }

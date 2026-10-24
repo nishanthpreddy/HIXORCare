@@ -34,7 +34,7 @@ export function Manager() {
     <div className="page">
       <div className="section-h" style={{ alignItems: 'flex-end' }}>
         <div className="grow">
-          <div className="eyebrow">Nurse manager · {mine.length > 1 ? `${mine.length} wards` : s.ward.name} · {duty.shift.label}</div>
+          <div className="eyebrow">{me?.title} · {mine.length > 1 ? `${mine.length} wards` : s.ward.name} · {duty.shift.label}</div>
           <h2 style={{ fontSize: 26, marginTop: 4 }}>{greeting}, {me?.short}</h2>
         </div>
         <span className="small muted hide-sm">Live at {clock(s.now)}</span>
@@ -110,7 +110,7 @@ export function Manager() {
                 <div className="team-row" key={x.id}>
                   <Avatar id={x.id} name={x.name} size={34} />
                   <div className="grow"><b>{x.name}</b><span className="small muted">{x.title}</span></div>
-                  <Chip tone={x.role === 'RN' || x.role === 'NM' ? 'accent' : undefined}>{x.role}</Chip>
+                  <Chip tone={x.role === 'RN' || x.role === 'NM' || x.role === 'HON' ? 'accent' : undefined}>{x.role}</Chip>
                 </div>
               ))}
             </div>
