@@ -178,6 +178,9 @@ def dose_record(ctx: Ctx, b: dict) -> None:
         raise ActionError("blocked", f"{r.preferred} is away from the home", r.status_note)
     if db.scalar(select(m.Administration).where(m.Administration.order_id == o.id, m.Administration.slot == slot, m.Administration.day == ctx.clk.day)):
         raise ActionError("invalid", "This dose is already recorded.")
+    if o.stopped_at:
+        doc = ctx.db.get(m.Staff, o.stopped_by) if o.stopped_by else None
+        raise ActionError("blocked", f"{o.drug.split(' (')[0]} was stopped", f"Stopped by {doc.name if doc else 'the doctor'}: {o.stop_reason}. Do not give it.")
     w = None
     values = b.get("values")
     if outcome == "given":
@@ -221,6 +224,23 @@ def dose_record(ctx: Ctx, b: dict) -> None:
                     f"{o.drug.split(' (')[0]} {state}",
                     f"{slot} dose. {b['reason']}.{' Time-critical medicine: inform the doctor.' if o.time_critical else ''}{(' ' + b['note']) if b.get('note') else ''}")
     ctx.message = stock_note.strip() or None
+
+
+@action("blister.discard", {"RN", "EN"})
+def blister_discard(ctx: Ctx, b: dict) -> None:
+    db = ctx.db
+    o = db.get(m.MedicationOrder, b.get("orderId"))
+    if not o:
+        raise ActionError("invalid", "Medicine order not found.")
+    if not o.stopped_at or o.supply != "blister":
+        raise ActionError("invalid", "This medicine is not a stopped blister-pack medicine.")
+    slot = b["slot"]
+    if db.scalar(select(m.Administration).where(m.Administration.order_id == o.id, m.Administration.slot == slot, m.Administration.day == ctx.clk.day)):
+        raise ActionError("invalid", "Already recorded for this round.")
+    r = resident(ctx, o.resident_id)
+    db.add(m.Administration(order_id=o.id, resident_id=r.id, slot=slot, day=ctx.clk.day, outcome="discarded",
+                            reason="Stopped order, popped out of blister pack", at=ctx.now, by_id=ctx.me.id))
+    ctx.audit("Stopped medicine discarded", r.id, f"{o.drug} {o.dose} popped out of the {slot} blister bubble and discarded. Stopped: {o.stop_reason}.")
 
 
 @action("order.verify", {"RN", "NM"})

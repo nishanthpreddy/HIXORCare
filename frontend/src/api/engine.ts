@@ -162,6 +162,7 @@ const ACTIONS: Record<string, { roles: Role[] | 'any'; run: Handler }> = {
       const r = residentOf(s, o.rid)!
       if (r.status !== 'in') return fail('blocked', `${r.preferred} is away from the home`, r.statusNote)
       if (findAdmin(s, o.id, b.slot)) return fail('invalid', 'This dose is already recorded.')
+      if (o.stopped) return fail('blocked', `${o.drug.split(' (')[0]} was stopped`, `Stopped by ${staff(st, o.stopped.by)?.name ?? 'the doctor'}: ${o.stopped.reason}. Do not give it.`)
       const outcome = b.outcome as string
       if (outcome === 'given') {
         if (awaitingVerification(o)) return fail('blocked', 'Waiting for RN verification', `${o.drug} was transcribed on admission and must be verified by a different RN before the first dose.`)
@@ -206,6 +207,21 @@ const ACTIONS: Record<string, { roles: Role[] | 'any'; run: Handler }> = {
         })
       }
       return { ok: true, message: stockNote.trim() || undefined }
+    },
+  },
+
+  'blister.discard': {
+    roles: ['RN', 'EN'],
+    run: (st, me, b) => {
+      const s = st.snap
+      const o = s.orders.find((x) => x.id === b.orderId)
+      if (!o) return fail('invalid', 'Medicine order not found.')
+      if (!o.stopped || o.supply !== 'blister') return fail('invalid', 'This medicine is not a stopped blister-pack medicine.')
+      if (findAdmin(s, o.id, b.slot)) return fail('invalid', 'Already recorded for this round.')
+      const r = residentOf(s, o.rid)!
+      s.administrations.push({ id: uid('ad'), orderId: o.id, rid: r.id, slot: b.slot, day: 0, outcome: 'discarded', reason: 'Stopped order, popped out of blister pack', t: s.now, by: me.id })
+      appendAudit(st, me.id, 'Stopped medicine discarded', r.id, `${o.drug} ${o.dose} popped out of the ${b.slot} blister bubble and discarded. Stopped: ${o.stopped.reason}.`)
+      return { ok: true }
     },
   },
 

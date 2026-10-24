@@ -539,6 +539,11 @@ function MedsTab({ r }: { r: Resident }) {
   const slots = [...new Set(regular.flatMap((o) => o.slots))].sort()
   const verifying = orders.filter(awaitingVerification)
   const pill = (o: (typeof orders)[number], sl: string) => {
+    if (o.stopped) {
+      if (!o.slots.includes(sl)) return <span className="muted">·</span>
+      const d = findAdmin(s, o.id, sl)
+      return d ? <span className="mar-pill tone-warning" title={`Popped out of the blister pack by ${staff(d.by)?.name}`}>Discarded</span> : <span className="mar-pill" style={{ background: 'var(--sunken)' }}>Stopped</span>
+    }
     if (!o.slots.includes(sl) || !isDueToday(o, s.day)) return <span className="muted">·</span>
     const a = findAdmin(s, o.id, sl)
     if (!a) {
@@ -559,10 +564,11 @@ function MedsTab({ r }: { r: Resident }) {
               {regular.map((o) => (
                 <tr key={o.id}>
                   <td style={{ minWidth: 220 }}>
-                    <b>{o.drug}</b>
+                    <b>{o.stopped ? <s>{o.drug}</s> : o.drug}</b>
                     <div className="small muted">{o.dose} · {o.route}{o.weekly !== undefined ? ' · weekly' : ''}{o.ownSupply ? ' · own supply from home' : ''}</div>
                     <div className="row wrap" style={{ gap: 4, marginTop: 4 }}>
                       {o.highAlert && <Chip tone="hi">High-alert</Chip>}{o.cd && <Chip tone="hi">CD</Chip>}{o.timeCritical && <Chip tone="warning">Time-critical</Chip>}
+                      {o.stopped && <Chip tone="critical" title={o.stopped.reason}>Stopped {when(o.stopped.t, s.day)}</Chip>}
                       {o.review && <Chip tone="accent">Review {new Date(o.review).toLocaleDateString('en-SG', { day: 'numeric', month: 'short' })}</Chip>}
                     </div>
                   </td>

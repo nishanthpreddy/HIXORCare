@@ -118,6 +118,10 @@ class MedicationOrder(Base):
     endorse_due: Mapped[datetime | None] = mapped_column(TS)
     verified_by: Mapped[str | None] = mapped_column(ForeignKey("staff.id"))
     verified_at: Mapped[datetime | None] = mapped_column(TS)
+    # Stopped mid-cycle: a blister-pack medicine stays in the pack and is popped out at each round
+    stopped_at: Mapped[datetime | None] = mapped_column(TS)
+    stopped_by: Mapped[str | None] = mapped_column(ForeignKey("staff.id"))
+    stop_reason: Mapped[str | None] = mapped_column(Text)
 
 
 class Administration(Base):

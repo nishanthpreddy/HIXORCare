@@ -36,6 +36,8 @@ def build(db: Session, clk: Clock, ward_id: str) -> dict:
         if o.transcribed_by:
             d["transcribed"] = {"by": o.transcribed_by, "t": T(o.transcribed_at), "source": o.transcription_source, "endorseDue": T(o.endorse_due),
                                 "verifiedBy": o.verified_by, "verifiedT": T(o.verified_at)}
+        if o.stopped_at:
+            d["stopped"] = {"t": T(o.stopped_at), "by": o.stopped_by, "reason": o.stop_reason}
         return {k: v for k, v in d.items() if v is not None}
 
     return {

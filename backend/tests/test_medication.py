@@ -91,3 +91,17 @@ def test_time_critical_refusal_alerts_nurse_in_charge(ward):
     assert status == 200
     alert = next(a for a in ward.snap()["alerts"] if a["rid"] == "r-muthu" and a["kind"] == "refused")
     assert alert["severity"] == "high"
+
+
+def test_stopped_blister_medicine_is_blocked_then_discarded(ward):
+    status, body = ward.act("s-ramesh", "dose.record", orderId="o-lim-amlo", slot="08:00", outcome="given", scan="blister", values={"sbp": 120})
+    assert status == 409 and "stopped" in body["message"]
+    snap = ward.snap()
+    assert next(o for o in snap["orders"] if o["id"] == "o-lim-amlo")["stopped"]["by"] == "s-drlim"
+    status, _ = ward.act("s-ramesh", "blister.discard", orderId="o-lim-amlo", slot="08:00")
+    assert status == 200
+    snap = ward.snap()
+    assert any(a["orderId"] == "o-lim-amlo" and a["outcome"] == "discarded" for a in snap["administrations"])
+    assert snap["audit"][0]["action"] == "Stopped medicine discarded"
+    assert ward.act("s-ramesh", "blister.discard", orderId="o-lim-amlo", slot="08:00")[0] == 422
+    assert ward.act("s-maricel", "blister.discard", orderId="o-lim-ator", slot="22:00")[0] == 403

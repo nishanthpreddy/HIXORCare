@@ -4,7 +4,7 @@ import { Icon } from '../ui/Icon'
 import { Avatar, Banner, Chip, PinPad, Ring, Sheet } from '../ui/kit'
 import {
   age, awaitingVerification, checkAdvice, clock, currentSlot, doseState, findAdmin, fullName, isRn, needsWitness, packBarcode,
-  prnStatus, residentOf, rnOnly, roundsToday, blisterBarcode, slotMin, until, when, canGiveMeds, type ScanResult,
+  prnStatus, residentOf, rnOnly, roundsToday, blisterBarcode, slotMin, stoppedInBlister, until, when, canGiveMeds, type ScanResult,
 } from '../domain/clinical'
 import { residentSlot, roundProgress } from '../domain/selectors'
 import type { Order, Resident } from '../domain/types'
@@ -129,6 +129,8 @@ function AdminPanel({ rid, slot, onBack, next, onNext }: { rid: string; slot: st
   const [tab, setTab] = useState<'due' | 'prn'>('due')
   const prnOrders = s.orders.filter((o) => o.rid === rid && o.prn)
   const blister = rs.orders.filter((o) => o.supply === 'blister')
+  const stopped = stoppedInBlister(s, rid, slot)
+  const stoppedPending = stopped.filter((o) => !findAdmin(s, o.id, slot))
   const packs = rs.orders.filter((o) => o.supply === 'pack')
   const allDone = rs.done === rs.total
   const away = r.status !== 'in'
@@ -153,7 +155,7 @@ function AdminPanel({ rid, slot, onBack, next, onNext }: { rid: string; slot: st
     toast('Blister pack medicines given.')
   }
 
-  const readyForAll = blister.filter((o) => !findAdmin(s, o.id, slot)).every((o) => scanned.has(o.id) && (!o.check || (values[o.id] && checkAdvice(o, Number(values[o.id]))?.tone !== 'critical')))
+  const readyForAll = stoppedPending.length === 0 && blister.filter((o) => !findAdmin(s, o.id, slot)).every((o) => scanned.has(o.id) && (!o.check || (values[o.id] && checkAdvice(o, Number(values[o.id]))?.tone !== 'critical')))
   const blisterPending = blister.filter((o) => !findAdmin(s, o.id, slot)).length
 
   return (
@@ -222,13 +224,13 @@ function AdminPanel({ rid, slot, onBack, next, onNext }: { rid: string; slot: st
 
       {tab === 'due' && (
         <>
-          {blister.length > 0 && (
+          {(blister.length > 0 || stopped.length > 0) && (
             <div className="card" style={{ overflow: 'hidden', opacity: idCheck || away ? 1 : 0.6 }}>
               <div className="card-h" style={{ paddingBottom: 12 }}>
                 <span className="med-icon tone-accent"><Icon name="layers" /></span>
                 <div className="grow">
                   <h3>Blister pack, {slot}</h3>
-                  <span className="small muted">Pharmacy multi-dose pack, {slot} bubble · {blister.length} medicine{blister.length > 1 ? 's' : ''} · <span className="mono">{blisterBarcode(rid, s.day, slot)}</span></span>
+                  <span className="small muted">Pharmacy multi-dose pack, {slot} bubble · {blister.length} medicine{blister.length === 1 ? '' : 's'}{stopped.length ? ` · ${stopped.length} stopped` : ''} · <span className="mono">{blisterBarcode(rid, s.day, slot)}</span></span>
                 </div>
                 {blisterPending > 0 && (
                   blister.every((o) => scanned.has(o.id) || findAdmin(s, o.id, slot))
@@ -243,6 +245,7 @@ function AdminPanel({ rid, slot, onBack, next, onNext }: { rid: string; slot: st
                   onGive={() => (needsWitness(o) ? setSheet({ kind: 'witness', order: o }) : give(o))}
                   onNotGiven={() => setSheet({ kind: 'notgiven', order: o })} />
               ))}
+              {stopped.map((o) => <StoppedRow key={o.id} o={o} slot={slot} enabled={!!idCheck} />)}
             </div>
           )}
           {packs.length > 0 && (
@@ -344,6 +347,38 @@ function AdminPanel({ rid, slot, onBack, next, onNext }: { rid: string; slot: st
       {sheet?.kind === 'prn' && <PrnSheet order={sheet.order} r={r} onClose={() => setSheet(null)} />}
       {sheet?.kind === 'effect' && <EffectSheet prnId={sheet.prnId} order={sheet.order} onClose={() => setSheet(null)} />}
       {sheet?.kind === 'verify' && <VerifySheet r={r} onClose={() => setSheet(null)} />}
+    </div>
+  )
+}
+
+/** A medicine the doctor stopped mid-cycle that is still in the blister bubble: pop it out and discard it. */
+function StoppedRow({ o, slot, enabled }: { o: Order; slot: string; enabled: boolean }) {
+  const { s, staff, act } = useApp()
+  const admin = findAdmin(s, o.id, slot)
+  const by = staff(o.stopped!.by)
+  return (
+    <div className={`med${admin ? ' done' : ''}`}>
+      <div className="med-top">
+        <span className="med-icon tone-critical"><Icon name="stop" /></span>
+        <div className="grow">
+          <div className="med-name"><s>{o.drug}</s></div>
+          <div className="med-dose">{o.dose} · stopped by {by?.name ?? 'the doctor'}, {when(o.stopped!.t, s.day).replace(/^Yesterday/, 'yesterday')}</div>
+        </div>
+        <div className="med-state">
+          <Chip tone={admin ? 'ok' : 'critical'} lg>{admin ? <><Icon name="check" />Discarded {clock(admin.t)} · {staff(admin.by)?.short}</> : 'Stopped, still in pack'}</Chip>
+        </div>
+      </div>
+      {!admin && (
+        <>
+          <div className="med-instr">Do not give. Pop it out of the {slot} bubble and discard it. Reason stopped: {o.stopped!.reason}.</div>
+          <div className="med-actions">
+            <span className="spacer" />
+            <button className="btn primary" disabled={!enabled} onClick={() => act('blister.discard', { orderId: o.id, slot }, { success: `${o.drug.split(' (')[0]} discarded.` })}>
+              <Icon name="check" />Popped out and discarded
+            </button>
+          </div>
+        </>
+      )}
     </div>
   )
 }

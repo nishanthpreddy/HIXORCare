@@ -68,6 +68,7 @@ Tests: `cd backend && DATABASE_URL=postgresql+psycopg://hixor@127.0.0.1:5433/hix
 - Hold parameters before giving: SBP < 100, pulse < 60, CBG < 4.
 - Witness (second RN/EN/NM PIN) for high-alert drugs and controlled drugs; RN-only for CDs and injectables.
 - PRN minimum interval and 24-hour maximum, with an effect check task.
+- Stopped medicines stay in the 28-day blister pack: the round blocks them and asks the nurse to pop out and discard, recorded on the MAR and audit trail.
 - Admission transcription double-check before first dose.
 - Append-only e-CD register and audit log, enforced in PostgreSQL triggers, not just in the app.
 - Deny-by-default role permissions declared per server action (`backend/app/actions.py`).

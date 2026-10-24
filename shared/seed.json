@@ -146,7 +146,7 @@
   "orders": [
     { "id": "o-lim-glar", "rid": "r-lim", "drug": "Insulin glargine (Lantus SoloStar)", "dose": "18 units", "route": "Subcutaneous", "slots": ["08:00"], "indication": "Type 2 diabetes", "classes": ["insulin"], "supply": "pack", "highAlert": true, "check": { "field": "cbg", "label": "Capillary glucose", "unit": "mmol/L", "holdBelow": 4, "warnAbove": 20 }, "instructions": "Rotate sites. Check CBG first.", "prescriber": "Dr Lim Wei Ming", "start": "2025-11-03" },
     { "id": "o-lim-lina", "rid": "r-lim", "drug": "Linagliptin", "dose": "5 mg tablet", "route": "Oral", "slots": ["08:00"], "indication": "Type 2 diabetes", "classes": ["dpp4"], "supply": "blister", "prescriber": "Dr Lim Wei Ming", "start": "2024-02-10" },
-    { "id": "o-lim-amlo", "rid": "r-lim", "drug": "Amlodipine", "dose": "10 mg tablet", "route": "Oral", "slots": ["08:00"], "indication": "Hypertension", "classes": ["ccb"], "supply": "blister", "check": { "field": "sbp", "label": "Systolic BP", "unit": "mmHg", "holdBelow": 100 }, "prescriber": "Dr Lim Wei Ming", "start": "2023-06-02" },
+    { "id": "o-lim-amlo", "rid": "r-lim", "drug": "Amlodipine", "dose": "10 mg tablet", "route": "Oral", "slots": ["08:00"], "indication": "Hypertension", "classes": ["ccb"], "supply": "blister", "check": { "field": "sbp", "label": "Systolic BP", "unit": "mmHg", "holdBelow": 100 }, "stopped": { "t": -620, "by": "s-drlim", "reason": "Systolic BP 96 to 104 for three days and dizzy on standing" }, "prescriber": "Dr Lim Wei Ming", "start": "2023-06-02" },
     { "id": "o-lim-ator", "rid": "r-lim", "drug": "Atorvastatin", "dose": "40 mg tablet", "route": "Oral", "slots": ["22:00"], "indication": "Cholesterol", "classes": ["statin"], "supply": "blister", "prescriber": "Dr Lim Wei Ming", "start": "2023-06-02" },
     { "id": "o-lim-gluc", "rid": "r-lim", "drug": "Glucose 40% oral gel", "dose": "15 g", "route": "Oral", "slots": [], "prn": { "reason": "CBG below 4 mmol/L", "minHours": 0.25, "maxPer24h": 4 }, "classes": ["glucose"], "supply": "pack", "prescriber": "Dr Lim Wei Ming", "start": "2025-11-03" },
 
@@ -348,6 +348,7 @@
     { "id": "h-1", "shift": "night", "t": 425, "from": "s-hidayah", "to": "s-aisyah", "summary": "Quiet night. Goh Kim Huat febrile 37.9 at 06:00, watch. Ho Peng refused quetiapine. Wong Mei Fong PRN morphine at 05:30." }
   ],
   "audit": [
+    { "t": -620, "by": "s-drlim", "action": "Order stopped", "rid": "r-lim", "detail": "Amlodipine 10 mg tablet stopped. Reason: systolic BP 96 to 104 for three days and dizzy on standing. Pharmacy informed; stays in the blister pack until the next cycle." },
     { "t": -114, "by": "s-hidayah", "action": "Dose refused", "rid": "r-ho", "detail": "Quetiapine 12.5 mg, 22:00 dose. Reason: resident refused." },
     { "t": -110, "by": "s-hidayah", "action": "Dose given", "rid": "r-ho", "detail": "Donepezil 5 mg, 22:00 dose." },
     { "t": 330, "by": "s-hidayah", "action": "PRN given", "rid": "r-wong", "detail": "Morphine oral solution 2.5 mg. Witness: Faiz Rahim (EN). CD register: 84 → 82.75 mL." },

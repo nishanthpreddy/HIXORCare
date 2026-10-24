@@ -58,6 +58,8 @@ def load(db: Session, day: date | None = None) -> None:
             review=date.fromisoformat(o["review"]) if o.get("review") else None, prn=o.get("prn"), prescriber=o["prescriber"], start=date.fromisoformat(o["start"]),
             transcribed_by=tr.get("by"), transcribed_at=dt(tr["t"]) if tr else None, transcription_source=tr.get("source"),
             endorse_due=dt(tr["endorseDue"]) if tr else None,
+            stopped_at=dt(o["stopped"]["t"]) if o.get("stopped") else None, stopped_by=(o.get("stopped") or {}).get("by"),
+            stop_reason=(o.get("stopped") or {}).get("reason"),
         ))
     for d in raw["decoyPacks"]:
         db.add(m.DemoPack(barcode=d["barcode"], label=d["label"], drug=d["drug"], classes=d["classes"], owner=d["owner"], note=d["note"]))

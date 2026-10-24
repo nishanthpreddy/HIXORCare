@@ -136,10 +136,20 @@ export const fullName = (r: Resident) => `${r.salutation} ${r.name}`
 
 export type DoseState = 'done' | 'due' | 'overdue' | 'upcoming' | 'late' | 'suspended'
 
+/** Pharmacy blister packs come on a 28-day cycle, so a stopped medicine stays in the pack until the next one. */
+export const BLISTER_CYCLE_DAYS = 28
+
+/** Stopped medicines still in this resident's blister bubble for the slot during the current pack cycle. */
+export function stoppedInBlister(s: Snapshot, rid: string, slot: string) {
+  return s.orders.filter((o) => o.rid === rid && o.stopped && o.supply === 'blister' && !o.prn && o.slots.includes(slot)
+    && o.stopped.t > s.now - BLISTER_CYCLE_DAYS * 1440)
+}
+
 /** Window either side of the due time in which a dose counts as on time. */
 export const windowMin = (o: Order) => (o.timeCritical ? 30 : 60)
 
 export function isDueToday(o: Order, day: string) {
+  if (o.stopped) return false
   if (o.weekly === undefined) return true
   return dateOf(day).getUTCDay() === o.weekly
 }

@@ -78,11 +78,13 @@ export interface Order {
   prn?: { reason: string; minHours: number; maxPer24h: number }
   /** Admission transcription (MOH LC §14): no dose until a different RN verifies. */
   transcribed?: { by: string; t: number; source: string; endorseDue: number; verifiedBy?: string; verifiedT?: number }
+  /** Stopped by the doctor. A blister-pack medicine stays in the pack until the next 28-day cycle, so it is popped out and discarded at each round. */
+  stopped?: { t: number; by: string; reason: string }
   prescriber: string
   start: string
 }
 
-export type Outcome = 'given' | 'held' | 'refused' | 'unavailable' | 'omitted'
+export type Outcome = 'given' | 'held' | 'refused' | 'unavailable' | 'omitted' | 'discarded'
 
 export interface Administration {
   id: string
