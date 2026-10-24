@@ -114,8 +114,8 @@ def cd_units(order) -> float:
     return float(m.group(1)) if m else 1.0
 
 
-def sachet_barcode(rid: str, day: str, slot: str) -> str:
-    return f"SCH-{rid[2:].upper()}-{day.replace('-', '')}-{slot.replace(':', '')}"
+def blister_barcode(rid: str, day: str, slot: str) -> str:
+    return f"DAA-{rid[2:].upper()}-{day.replace('-', '')}-{slot.replace(':', '')}"
 
 
 def pack_barcode(order_id: str) -> str:
@@ -150,14 +150,14 @@ def verify_scan(resident, due_orders, all_orders, residents, decoys, day: str, s
                 [],
             )
         return ScanResult(False, "not-prescribed", "Not prescribed for this resident", f"{decoy.label} is not on {name}'s chart. Put it aside.", [])
-    if barcode.startswith("SCH-"):
-        if barcode == sachet_barcode(resident.id, day, slot):
-            ids = [o.id for o in due_orders if o.supply == "sachet"]
-            return ScanResult(True, "match", "Sachet matches", f"{len(ids)} medicine{'' if len(ids) == 1 else 's'} for {slot}.", ids)
-        other = next((r for r in residents if barcode.startswith(f"SCH-{r.id[2:].upper()}-")), None)
+    if barcode.startswith("DAA-"):
+        if barcode == blister_barcode(resident.id, day, slot):
+            ids = [o.id for o in due_orders if o.supply == "blister"]
+            return ScanResult(True, "match", "Blister pack matches", f"{len(ids)} medicine{'' if len(ids) == 1 else 's'} for {slot}.", ids)
+        other = next((r for r in residents if barcode.startswith(f"DAA-{r.id[2:].upper()}-")), None)
         if other and other.id != resident.id:
-            return ScanResult(False, "wrong-resident", "Wrong resident", f"This sachet belongs to {other.salutation} {other.name} ({other.bed}). Do not give it.", [])
-        return ScanResult(False, "wrong-time", "Wrong time", f"This sachet is not for the {slot} round.", [])
+            return ScanResult(False, "wrong-resident", "Wrong resident", f"This blister pack belongs to {other.salutation} {other.name} ({other.bed}). Do not give it.", [])
+        return ScanResult(False, "wrong-time", "Wrong time", f"This blister pack is not for the {slot} round.", [])
     order = next((o for o in all_orders if pack_barcode(o.id) == barcode), None)
     if not order:
         return ScanResult(False, "not-prescribed", "Unknown barcode", "This barcode is not on any chart in this ward.", [])

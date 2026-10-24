@@ -167,7 +167,7 @@ const ACTIONS: Record<string, { roles: Role[] | 'any'; run: Handler }> = {
         if (awaitingVerification(o)) return fail('blocked', 'Waiting for RN verification', `${o.drug} was transcribed on admission and must be verified by a different RN before the first dose.`)
         if (rnOnly(o) && !isRn(me.role)) return fail('forbidden', 'A registered nurse must give this', `${o.cd ? 'Controlled drugs' : 'Injectables'} are prepared and given by an RN. You can act as the second checker.`)
         if (!s.idChecks.some((c) => c.rid === r.id && c.slot === b.slot)) return fail('blocked', 'Confirm identity first', 'Scan the wristband before giving medicines.')
-        if (!b.scan) return fail('blocked', 'Scan the medicine first', 'Scan the sachet or pack so the system can check it.')
+        if (!b.scan) return fail('blocked', 'Scan the medicine first', 'Scan the blister pack or original pack so the system can check it.')
         const clash = allergyClash(r.allergies, o.classes)
         if (clash) return fail('blocked', `Allergy: ${clash.substance}`, `${r.preferred} has a recorded ${clash.type} to ${clash.substance} (${clash.reaction}). Contact the doctor.`)
         if (o.check) {

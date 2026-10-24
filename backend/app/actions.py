@@ -189,7 +189,7 @@ def dose_record(ctx: Ctx, b: dict) -> None:
         if not db.scalar(select(m.IdentityCheck).where(m.IdentityCheck.resident_id == r.id, m.IdentityCheck.slot == slot, m.IdentityCheck.day == ctx.clk.day)):
             raise ActionError("blocked", "Confirm identity first", "Scan the wristband before giving medicines.")
         if not b.get("scan"):
-            raise ActionError("blocked", "Scan the medicine first", "Scan the sachet or pack so the system can check it.")
+            raise ActionError("blocked", "Scan the medicine first", "Scan the blister pack or original pack so the system can check it.")
         clash = allergy_clash(r.allergies, o.classes)
         if clash:
             raise ActionError("blocked", f"Allergy: {clash.substance}", f"{r.preferred} has a recorded {clash.type} to {clash.substance} ({clash.reaction}). Contact the doctor.")

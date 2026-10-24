@@ -64,7 +64,7 @@ export interface Order {
   slots: string[]
   indication?: string
   classes: string[]
-  supply: 'sachet' | 'pack'
+  supply: 'blister' | 'pack'
   /** Resident's own medicines (respite): integrity checked on arrival, MOH LC section 14. */
   ownSupply?: string
   highAlert?: boolean
@@ -96,7 +96,7 @@ export interface Administration {
   values?: Record<string, number>
   witness?: string
   preparedBy?: string
-  scan?: 'sachet' | 'pack' | 'manual'
+  scan?: 'blister' | 'pack' | 'manual'
   t: number
   by: string
 }

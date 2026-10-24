@@ -52,7 +52,7 @@ Tests: `cd backend && DATABASE_URL=postgresql+psycopg://hixor@127.0.0.1:5433/hix
 1. **Unlock** as Aisyah Rahman (RN, nurse in charge), PIN `1234`. The tablet locks itself after 2 minutes idle.
 2. **Today** shows the 08:00 round, open alerts, tasks due in the next hour, and *Needs you now*, ranked by urgency.
 3. **Med round** → Mdm Tan Siew Lan. Confirm identity (scan wristband), then scan the **Augmentin** decoy pack:
-   it is blocked for her penicillin anaphylaxis. Scan the sachet and give the rest.
+   it is blocked for her penicillin anaphylaxis. Scan the blister pack and give the rest.
 4. **Insulin / morphine**: high-alert and controlled drugs need a second nurse's PIN. Controlled drugs write to the
    **electronic CD register** with a running balance, and only an RN may give them.
 5. **Mdm Lee Swee Chin** (new admission): her orders were transcribed overnight and must be verified by a
@@ -63,7 +63,7 @@ Tests: `cd backend && DATABASE_URL=postgresql+psycopg://hixor@127.0.0.1:5433/hix
 
 ## Safety rules implemented
 
-- Five rights at the bedside: wristband/manual ID with reason, sachet and pack barcodes, wrong-resident and wrong-time blocks.
+- Five rights at the bedside: wristband/manual ID with reason, multi-dose blister pack and original pack barcodes, wrong-resident and wrong-time blocks.
 - Allergy and drug-class clash blocks (e.g. penicillin → co-amoxiclav, NSAID → ibuprofen).
 - Hold parameters before giving: SBP < 100, pulse < 60, CBG < 4.
 - Witness (second RN/EN/NM PIN) for high-alert drugs and controlled drugs; RN-only for CDs and injectables.
@@ -81,7 +81,7 @@ Those are form-and-menu systems built around the record. HIXOR Care is built aro
 | Ward work | Typical today | HIXOR Care |
 | --- | --- | --- |
 | Start of shift | Open each resident's chart | *Needs you now* list, ranked |
-| Med round | eMAR grid, tick per drug | Resident-by-resident round, sachet scan, give-all with blocks |
+| Med round | eMAR grid, tick per drug | Resident-by-resident round, blister pack scan, give-all with blocks |
 | CD drugs | Paper register or separate screen | Witness PIN on the dose writes the e-CD register |
 | Deterioration | Obs form, nurse calculates | Live NEWS2 while typing, SBAR draft |
 | Assessments | Forms on a schedule | Due tasks, scoring, care-plan suggestions to sign |

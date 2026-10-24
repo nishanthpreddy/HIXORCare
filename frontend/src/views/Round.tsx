@@ -4,7 +4,7 @@ import { Icon } from '../ui/Icon'
 import { Avatar, Banner, Chip, PinPad, Ring, Sheet } from '../ui/kit'
 import {
   age, awaitingVerification, checkAdvice, clock, currentSlot, doseState, findAdmin, fullName, isRn, needsWitness, packBarcode,
-  prnStatus, residentOf, rnOnly, roundsToday, sachetBarcode, slotMin, until, when, canGiveMeds, type ScanResult,
+  prnStatus, residentOf, rnOnly, roundsToday, blisterBarcode, slotMin, until, when, canGiveMeds, type ScanResult,
 } from '../domain/clinical'
 import { residentSlot, roundProgress } from '../domain/selectors'
 import type { Order, Resident } from '../domain/types'
@@ -128,7 +128,7 @@ function AdminPanel({ rid, slot, onBack, next, onNext }: { rid: string; slot: st
   const [sheet, setSheet] = useState<SheetState>(null)
   const [tab, setTab] = useState<'due' | 'prn'>('due')
   const prnOrders = s.orders.filter((o) => o.rid === rid && o.prn)
-  const sachet = rs.orders.filter((o) => o.supply === 'sachet')
+  const blister = rs.orders.filter((o) => o.supply === 'blister')
   const packs = rs.orders.filter((o) => o.supply === 'pack')
   const allDone = rs.done === rs.total
   const away = r.status !== 'in'
@@ -143,18 +143,18 @@ function AdminPanel({ rid, slot, onBack, next, onNext }: { rid: string; slot: st
     return res
   }
 
-  const giveAllSachet = async () => {
-    for (const o of sachet) {
+  const giveAllBlister = async () => {
+    for (const o of blister) {
       if (findAdmin(s, o.id, slot) || !scanned.has(o.id) || needsWitness(o) || (o.check && !values[o.id])) continue
       const v = o.check ? { [o.check.field]: Number(values[o.id]) } : undefined
-      const res = await act('dose.record', { orderId: o.id, slot, outcome: 'given', scan: 'sachet', values: v }, { quiet: true })
+      const res = await act('dose.record', { orderId: o.id, slot, outcome: 'given', scan: 'blister', values: v }, { quiet: true })
       if (!res.ok) { toast(`${o.drug}: ${res.message}`, 'critical'); return }
     }
-    toast('Sachet medicines given.')
+    toast('Blister pack medicines given.')
   }
 
-  const readyForAll = sachet.filter((o) => !findAdmin(s, o.id, slot)).every((o) => scanned.has(o.id) && (!o.check || (values[o.id] && checkAdvice(o, Number(values[o.id]))?.tone !== 'critical')))
-  const sachetPending = sachet.filter((o) => !findAdmin(s, o.id, slot)).length
+  const readyForAll = blister.filter((o) => !findAdmin(s, o.id, slot)).every((o) => scanned.has(o.id) && (!o.check || (values[o.id] && checkAdvice(o, Number(values[o.id]))?.tone !== 'critical')))
+  const blisterPending = blister.filter((o) => !findAdmin(s, o.id, slot)).length
 
   return (
     <div className="admin-inner fade-in">
@@ -222,24 +222,24 @@ function AdminPanel({ rid, slot, onBack, next, onNext }: { rid: string; slot: st
 
       {tab === 'due' && (
         <>
-          {sachet.length > 0 && (
+          {blister.length > 0 && (
             <div className="card" style={{ overflow: 'hidden', opacity: idCheck || away ? 1 : 0.6 }}>
               <div className="card-h" style={{ paddingBottom: 12 }}>
                 <span className="med-icon tone-accent"><Icon name="layers" /></span>
                 <div className="grow">
-                  <h3>Sachet {slot}</h3>
-                  <span className="small muted">Pre-packed by the pharmacy · {sachet.length} medicine{sachet.length > 1 ? 's' : ''} · <span className="mono">{sachetBarcode(rid, s.day, slot)}</span></span>
+                  <h3>Blister pack, {slot}</h3>
+                  <span className="small muted">Pharmacy multi-dose pack, {slot} bubble · {blister.length} medicine{blister.length > 1 ? 's' : ''} · <span className="mono">{blisterBarcode(rid, s.day, slot)}</span></span>
                 </div>
-                {sachetPending > 0 && (
-                  sachet.every((o) => scanned.has(o.id) || findAdmin(s, o.id, slot))
-                    ? <button className="btn ok" disabled={!readyForAll || !idCheck} onClick={giveAllSachet}><Icon name="check" />Give all {sachetPending}</button>
-                    : <button className="btn primary" disabled={!idCheck} onClick={() => setSheet({ kind: 'scan', orderIds: sachet.map((o) => o.id) })}><Icon name="scan" />Scan sachet</button>
+                {blisterPending > 0 && (
+                  blister.every((o) => scanned.has(o.id) || findAdmin(s, o.id, slot))
+                    ? <button className="btn ok" disabled={!readyForAll || !idCheck} onClick={giveAllBlister}><Icon name="check" />Give all {blisterPending}</button>
+                    : <button className="btn primary" disabled={!idCheck} onClick={() => setSheet({ kind: 'scan', orderIds: blister.map((o) => o.id) })}><Icon name="scan" />Scan blister pack</button>
                 )}
               </div>
-              {sachet.map((o) => (
+              {blister.map((o) => (
                 <MedRow key={o.id} o={o} slot={slot} scanned={scanned.has(o.id)} enabled={!!idCheck} value={values[o.id] ?? ''}
                   onValue={(v) => setValues((x) => ({ ...x, [o.id]: v }))}
-                  onScan={() => setSheet({ kind: 'scan', orderIds: sachet.map((x) => x.id) })}
+                  onScan={() => setSheet({ kind: 'scan', orderIds: blister.map((x) => x.id) })}
                   onGive={() => (needsWitness(o) ? setSheet({ kind: 'witness', order: o }) : give(o))}
                   onNotGiven={() => setSheet({ kind: 'notgiven', order: o })} />
               ))}
@@ -406,7 +406,7 @@ function MedRow({ o, slot, scanned, enabled, value, onValue, onScan, onGive, onN
             </div>
           )}
           <div className="med-actions">
-            {scanned ? <Chip tone="ok" icon="check">Scanned, matches</Chip> : <span className="small muted">{o.supply === 'sachet' ? 'In the sachet' : <>Pack <span className="mono">{packBarcode(o.id)}</span></>}</span>}
+            {scanned ? <Chip tone="ok" icon="check">Scanned, matches</Chip> : <span className="small muted">{o.supply === 'blister' ? 'In the blister pack' : <>Original pack <span className="mono">{packBarcode(o.id)}</span></>}</span>}
             <span className="spacer" />
             <button className="btn" disabled={!enabled} onClick={onNotGiven}>Not given</button>
             {!scanned ? (
@@ -427,10 +427,10 @@ function MedRow({ o, slot, scanned, enabled, value, onValue, onScan, onGive, onN
 function trolley(s: ReturnType<typeof useApp>['s'], r: Resident, slot: string, orderIds: string[]) {
   const opts: { code: string; label: string; note: string }[] = []
   const orders = s.orders.filter((o) => orderIds.includes(o.id))
-  if (orders.some((o) => o.supply === 'sachet')) opts.push({ code: sachetBarcode(r.id, s.day, slot), label: `Sachet: ${r.name}, ${slot}`, note: `${orders.length} medicines · printed by pharmacy` })
+  if (orders.some((o) => o.supply === 'blister')) opts.push({ code: blisterBarcode(r.id, s.day, slot), label: `Blister pack: ${r.name}, ${slot}`, note: `${orders.length} medicines · ${slot} bubble` })
   for (const o of orders.filter((x) => x.supply === 'pack')) opts.push({ code: packBarcode(o.id), label: `${o.drug} · ${r.name}`, note: 'Labelled pack' })
-  const neighbour = s.residents.find((x) => x.id !== r.id && x.status === 'in' && s.orders.some((o) => o.rid === x.id && o.slots.includes(slot) && o.supply === 'sachet'))
-  if (neighbour) opts.push({ code: sachetBarcode(neighbour.id, s.day, slot), label: `Sachet: ${neighbour.name}, ${slot}`, note: `${neighbour.bed} · same trolley drawer` })
+  const neighbour = s.residents.find((x) => x.id !== r.id && x.status === 'in' && s.orders.some((o) => o.rid === x.id && o.slots.includes(slot) && o.supply === 'blister'))
+  if (neighbour) opts.push({ code: blisterBarcode(neighbour.id, s.day, slot), label: `Blister pack: ${neighbour.name}, ${slot}`, note: `${neighbour.bed} · next card in the trolley` })
   for (const d of s.decoyPacks) opts.push({ code: d.barcode, label: d.label, note: d.note })
   return opts
 }

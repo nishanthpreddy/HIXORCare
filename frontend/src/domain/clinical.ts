@@ -183,7 +183,7 @@ export function currentSlot(s: Snapshot) {
 
 export const residentOf = (s: Snapshot, rid: string) => s.residents.find((r) => r.id === rid)
 
-export const sachetBarcode = (rid: string, day: string, slot: string) => `SCH-${rid.slice(2).toUpperCase()}-${day.replaceAll('-', '')}-${slot.replace(':', '')}`
+export const blisterBarcode = (rid: string, day: string, slot: string) => `DAA-${rid.slice(2).toUpperCase()}-${day.replaceAll('-', '')}-${slot.replace(':', '')}`
 export const packBarcode = (orderId: string) => `PK-${orderId.slice(2).toUpperCase()}`
 
 export function allergyClash(allergies: Allergy[], classes: string[]) {
@@ -214,16 +214,16 @@ export function verifyScan(s: Snapshot, rid: string, slot: string, barcode: stri
     }
     return { ok: false, kind: 'not-prescribed', orderIds: [], title: 'Not prescribed for this resident', detail: `${decoy.label} is not on ${fullName(r)}'s chart. Put it aside.` }
   }
-  if (barcode.startsWith('SCH-')) {
-    if (barcode === sachetBarcode(rid, s.day, slot)) {
-      const ids = due.filter((o) => o.supply === 'sachet').map((o) => o.id)
-      return { ok: true, kind: 'match', orderIds: ids, title: 'Sachet matches', detail: `${ids.length} medicine${ids.length === 1 ? '' : 's'} for ${slot}.` }
+  if (barcode.startsWith('DAA-')) {
+    if (barcode === blisterBarcode(rid, s.day, slot)) {
+      const ids = due.filter((o) => o.supply === 'blister').map((o) => o.id)
+      return { ok: true, kind: 'match', orderIds: ids, title: 'Blister pack matches', detail: `${ids.length} medicine${ids.length === 1 ? '' : 's'} for ${slot}.` }
     }
-    const other = s.residents.find((x) => barcode.startsWith(`SCH-${x.id.slice(2).toUpperCase()}-`))
+    const other = s.residents.find((x) => barcode.startsWith(`DAA-${x.id.slice(2).toUpperCase()}-`))
     if (other && other.id !== rid) {
-      return { ok: false, kind: 'wrong-resident', orderIds: [], title: 'Wrong resident', detail: `This sachet belongs to ${fullName(other)} (${other.bed}). Do not give it.` }
+      return { ok: false, kind: 'wrong-resident', orderIds: [], title: 'Wrong resident', detail: `This blister pack belongs to ${fullName(other)} (${other.bed}). Do not give it.` }
     }
-    return { ok: false, kind: 'wrong-time', orderIds: [], title: 'Wrong time', detail: `This sachet is not for the ${slot} round.` }
+    return { ok: false, kind: 'wrong-time', orderIds: [], title: 'Wrong time', detail: `This blister pack is not for the ${slot} round.` }
   }
   const order = s.orders.find((o) => packBarcode(o.id) === barcode)
   if (!order) return { ok: false, kind: 'not-prescribed', orderIds: [], title: 'Unknown barcode', detail: 'This barcode is not on any chart in this ward.' }

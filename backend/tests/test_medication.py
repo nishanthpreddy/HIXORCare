@@ -12,8 +12,8 @@ def test_allergy_block_on_scan_raises_near_miss(ward):
     assert snap["audit"][0]["action"] == "Allergy block"
 
 
-def test_wrong_residents_sachet_is_blocked(ward):
-    _, body = ward.act("s-ramesh", "scan.verify", rid="r-tan", slot="08:00", barcode="SCH-LIM-" + ward.snap()["day"].replace("-", "") + "-0800")
+def test_wrong_residents_blister_is_blocked(ward):
+    _, body = ward.act("s-ramesh", "scan.verify", rid="r-tan", slot="08:00", barcode="DAA-LIM-" + ward.snap()["day"].replace("-", "") + "-0800")
     assert body["data"]["kind"] == "wrong-resident"
 
 
@@ -23,20 +23,20 @@ def test_wrong_wristband_is_blocked(ward):
 
 
 def test_no_dose_without_identity_check(ward):
-    status, body = ward.act("s-ramesh", "dose.record", orderId="o-tan-aspi", slot="08:00", outcome="given", scan="sachet")
+    status, body = ward.act("s-ramesh", "dose.record", orderId="o-tan-aspi", slot="08:00", outcome="given", scan="blister")
     assert status == 409 and body["message"] == "Confirm identity first"
 
 
 def test_hold_parameter_blocks_giving(ward):
     confirm(ward, "s-ramesh", "r-tan")
-    status, body = ward.act("s-ramesh", "dose.record", orderId="o-tan-amlo", slot="08:00", outcome="given", scan="sachet", values={"sbp": 95})
+    status, body = ward.act("s-ramesh", "dose.record", orderId="o-tan-amlo", slot="08:00", outcome="given", scan="blister", values={"sbp": 95})
     assert status == 409 and body["message"] == "Hold this dose"
     status, _ = ward.act("s-ramesh", "dose.record", orderId="o-tan-amlo", slot="08:00", outcome="held", reason="Vital signs out of range", values={"sbp": 95})
     assert status == 200
 
 
 def test_care_aide_cannot_record_doses(ward):
-    status, body = ward.act("s-maricel", "dose.record", orderId="o-tan-aspi", slot="08:00", outcome="given", scan="sachet")
+    status, body = ward.act("s-maricel", "dose.record", orderId="o-tan-aspi", slot="08:00", outcome="given", scan="blister")
     assert status == 403
 
 
@@ -64,20 +64,20 @@ def test_controlled_drug_needs_witness_and_updates_register(ward):
 
 def test_dose_recorded_once(ward):
     confirm(ward, "s-ramesh", "r-tan")
-    assert ward.act("s-ramesh", "dose.record", orderId="o-tan-aspi", slot="08:00", outcome="given", scan="sachet")[0] == 200
-    status, body = ward.act("s-ramesh", "dose.record", orderId="o-tan-aspi", slot="08:00", outcome="given", scan="sachet")
+    assert ward.act("s-ramesh", "dose.record", orderId="o-tan-aspi", slot="08:00", outcome="given", scan="blister")[0] == 200
+    status, body = ward.act("s-ramesh", "dose.record", orderId="o-tan-aspi", slot="08:00", outcome="given", scan="blister")
     assert status == 422
 
 
 def test_admission_transcription_must_be_verified_by_another_rn(ward):
     confirm(ward, "s-aisyah", "r-lee")
-    status, body = ward.act("s-aisyah", "dose.record", orderId="o-lee-omep", slot="08:00", outcome="given", scan="sachet")
+    status, body = ward.act("s-aisyah", "dose.record", orderId="o-lee-omep", slot="08:00", outcome="given", scan="blister")
     assert status == 409 and body["message"] == "Waiting for RN verification"
     status, body = ward.act("s-hidayah", "order.verify", rid="r-lee", pin="1234")
     assert status == 409 and body["message"] == "A different RN must verify"
     assert ward.act("s-ramesh", "order.verify", rid="r-lee", pin="1234")[0] == 403  # ENs cannot verify
     assert ward.act("s-aisyah", "order.verify", rid="r-lee", pin="1234")[0] == 200
-    assert ward.act("s-aisyah", "dose.record", orderId="o-lee-omep", slot="08:00", outcome="given", scan="sachet")[0] == 200
+    assert ward.act("s-aisyah", "dose.record", orderId="o-lee-omep", slot="08:00", outcome="given", scan="blister")[0] == 200
 
 
 def test_prn_minimum_interval(ward):

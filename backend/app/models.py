@@ -98,7 +98,7 @@ class MedicationOrder(Base):
     slots: Mapped[list[str]] = mapped_column(ARRAY(String(5)), default=list)
     indication: Mapped[str | None] = mapped_column(String(200))
     classes: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
-    supply: Mapped[str] = mapped_column(String(10))  # sachet | pack
+    supply: Mapped[str] = mapped_column(String(10))  # blister (multi-dose pack) | pack (original pack)
     own_supply: Mapped[str | None] = mapped_column(Text)  # resident's own medicines and who checked them
     high_alert: Mapped[bool] = mapped_column(Boolean, default=False)
     cd: Mapped[bool] = mapped_column(Boolean, default=False)
